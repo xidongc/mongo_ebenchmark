@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package productpb;
+
+option go_package = "github.com/xidongc/mongodb_ebenchmark/model/product/productpb";
+
+import "sku/skupb/sku.proto";
+import "google/api/annotations.proto";
+
+service ProductService {
+    rpc New (NewRequest) returns (Product) {
+        option (google.api.http) = {
+        post: "/product"
+        body: "*"
+    };
+    }
+    rpc Get (GetRequest) returns (Product) {
+        option (google.api.http) = {
+        get: "/product"
+        body: "*"
+    };
+    }
+    rpc Update (UpdateRequest) returns (Product) {
+        option (google.api.http) = {
+        put: "/product"
+        body: "*"
+    };
+    }
+    rpc Delete (DeleteRequest) returns (Empty) {
+        option (google.api.http) = {
+        delete: "/product"
+        body: "*"
+    };
+    }
+}
+
+message Empty {}
+
+message NewRequest {
+    string name = 1;
+    bool active = 2;
+    repeated string attributes = 3;
+    string description = 4;
+    repeated string images = 5;
+    map<string, string> metadata = 6;
+    bool shippable = 7;
+    string url = 8;
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message DeleteRequest {
+    string id = 1;
+}
+
+message UpdateRequest {
+    string id = 1;
+    string name = 2;
+    bool active = 3;
+    repeated string attributes = 4;
+    string description = 5;
+    repeated string images = 6;
+    map<string, string> metadata = 7;
+    bool shippable = 8;
+    string url = 9;
+}
+
+enum Category {
+    Electronics = 0;
+    Food = 1;
+    Sports = 2;
+}
+
+message Product {
+    string id = 1;
+    string name = 2;
+    bool active = 3;
+    repeated string attributes = 4 ;
+    string description = 5 ;
+    repeated string images = 6 ;
+    map<string, string> metadata = 7 ;
+    bool shippable = 8 ;
+    string url = 9 ;
+    repeated skupb.Sku skus = 10;
+    Category type = 11;
+    int64 created = 998 ;
+    int64 updated = 999 ;
+}

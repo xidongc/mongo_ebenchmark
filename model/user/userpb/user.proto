@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package userpb;
+
+option go_package = "github.com/xidongc/mongodb_ebenchmark/model/user/userpb";
+
+import "payment/paymentpb/payment.proto";
+import "google/api/annotations.proto";
+
+service UserService {
+    rpc New (NewRequest) returns (User) {
+        option (google.api.http) = {
+        post: "/user"
+        body: "*"
+    };
+    }
+    rpc Get (GetRequest) returns (User) {
+        option (google.api.http) = {
+        get: "/user"
+        body: "*"
+    };
+    }
+    rpc Update (UpdateRequest) returns (User) {
+        option (google.api.http) = {
+        put: "/user"
+        body: "*"
+    };
+    }
+    rpc Delete (DeleteRequest) returns (Empty) {
+        option (google.api.http) = {
+        delete: "/user"
+        body: "*"
+    };
+    }
+}
+
+message NewRequest {
+    string name = 1;
+    string nickname = 2;
+    string email = 3;
+    bool   active = 4;
+    int64  balance = 5;
+    paymentpb.Currency currency = 6;
+    string image = 7;
+    string pwd = 8;
+    map<string, string> metadata = 9;
+}
+
+message Empty {
+
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message UpdateRequest {
+    string id = 1;
+    string name = 2;
+    string nickname = 3;
+    string email = 4;
+    bool   active = 5;
+    int64  balance = 6;
+    paymentpb.Currency currency = 7;
+    string image = 8;
+    string pwd = 9;
+    map<string, string> metadata = 10;
+}
+
+message DeleteRequest {
+    string id = 1;
+}
+
+
+message User {
+    string id = 1;
+    string name = 2;
+    string nickname = 3;
+    string email = 4;
+    bool   active = 5;
+    int64  balance = 6;
+    paymentpb.Currency currency = 7;
+    string image = 8;
+    string pwd = 9;
+    map<string, string> metadata = 10;
+    int64  created = 998;
+    int64  updated = 999;
+}

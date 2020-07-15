@@ -1,0 +1,244 @@
+syntax = "proto3";
+
+package paymentpb;
+
+option go_package = "github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb";
+
+import "google/api/annotations.proto";
+
+service PaymentService {
+    rpc NewCharge(ChargeRequest) returns (Charge) {
+        option (google.api.http) = {
+        post: "/charge"
+        body: "*"
+    };
+    }
+    rpc RefundCharge (RefundRequest) returns (Charge) {
+        option (google.api.http) = {
+        post: "/refund"
+        body: "*"
+    };
+    }
+    rpc Get (GetRequest) returns (Charge) {
+        option (google.api.http) = {
+        get: "/charge"
+        body: "*"
+      };
+    }
+
+}
+
+message ChargeRequest {
+    Currency currency = 1;
+    uint64 amount = 2;
+    Card Card = 3;
+    string userId = 4;
+    string statement = 5;
+    PaymentProviderId paymentProviderId = 6;
+    map<string, string> metadata = 7;
+}
+
+message RefundRequest {
+    string id = 1;
+    uint64 amount = 2;
+    RefundReason reason = 3;
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message Charge {
+    string id = 1;
+    string merchantId = 2;
+    uint64 chargeAmount = 3;
+    uint64 refundAmount = 4;
+    repeated Refund refunds = 5;
+    Currency currency = 6;
+    string userId = 7;
+    bool paid = 8;
+    bool refunded = 9;
+    int64 created = 998;
+    int64 updated = 999;
+}
+
+enum PaymentProviderId {
+    PROVIDER_Reserved = 0;
+    AliPay = 1;
+    Paypal = 2;
+    WeChat = 3;
+
+}
+
+enum ChargeStatus {
+    Paid = 0;
+    Refunded = 1;
+}
+
+enum RefundReason {
+    GeneralError = 0;
+    Fraud = 1;
+    Duplicate = 2;
+    RequestedByCustomer = 3;
+}
+
+message Refund {
+    uint64 refundAmount = 1;
+    string providerRefundId = 2;
+    RefundReason reason = 3;
+    int64 created = 4;
+}
+
+message Card {
+    string Number = 1;
+    string ExpireMonth = 2;
+    string ExpireYear = 3;
+    string FirstName = 4;
+    string LastName = 5;
+    string CVC = 6;
+    CardType type = 8;
+}
+
+
+enum CardType {
+    CARD_Reserved = 0;
+    Mastercard = 1;
+    Visa = 2;
+    AmericanExpress = 3;
+    JCB = 4;
+    Discover = 5;
+    DinersClub = 6;
+}
+
+enum Currency {
+    CUR_RESERVED = 0;
+    AFN = 1;
+    ALL = 2;
+    AMD = 3;
+    ANG = 4;
+    ARS = 5;
+    AUD = 6;
+    AWG = 7;
+    AZN = 8;
+    BAM = 9;
+    BBD = 10;
+    BGN = 11;
+    BHD = 12;
+    BMD = 13;
+    BND = 14;
+    BOB = 15;
+    BRL = 16;
+    BSD = 17;
+    BWP = 18;
+    BYN = 19;
+    BYR = 20;
+    BZD = 21;
+    CAD = 22;
+    CLP = 23;
+    CNY = 24;
+    COP = 25;
+    CRC = 26;
+    CUP = 27;
+    CZK = 28;
+    DKK = 29;
+    DOP = 30;
+    DZD = 31;
+    EEK = 32;
+    EGP = 33;
+    EUR = 34;
+    FJD = 35;
+    FKP = 36;
+    GBP = 37;
+    GGP = 38;
+    GHC = 39;
+    GIP = 40;
+    GTQ = 41;
+    GYD = 42;
+    HKD = 43;
+    HNL = 44;
+    HRK = 45;
+    HUF = 46;
+    IDR = 47;
+    ILS = 48;
+    IMP = 49;
+    INR = 50;
+    IQD = 51;
+    IRR = 52;
+    ISK = 53;
+    JEP = 54;
+    JMD = 55;
+    JOD = 56;
+    JPY = 57;
+    KES = 58;
+    KGS = 59;
+    KHR = 60;
+    KPW = 61;
+    KRW = 62;
+    KWD = 63;
+    KYD = 64;
+    KZT = 65;
+    LAK = 66;
+    LBP = 67;
+    LKR = 68;
+    LRD = 69;
+    LTL = 70;
+    LVL = 71;
+    LYD = 72;
+    MAD = 73;
+    MKD = 74;
+    MNT = 75;
+    MUR = 76;
+    MXN = 77;
+    MWK = 78;
+    MYR = 79;
+    MZN = 80;
+    NAD = 81;
+    NGN = 82;
+    NIO = 83;
+    NOK = 84;
+    NPR = 85;
+    NZD = 86;
+    OMR = 87;
+    PAB = 88;
+    PEN = 89;
+    PHP = 90;
+    PKR = 91;
+    PLN = 92;
+    PYG = 93;
+    QAR = 94;
+    RON = 95;
+    RSD = 96;
+    RUB = 97;
+    RUR = 98;
+    SAR = 99;
+    SBD = 100;
+    SCR = 101;
+    SEK = 102;
+    SGD = 103;
+    SHP = 104;
+    SOS = 105;
+    SRD = 106;
+    SVC = 107;
+    SYP = 108;
+    THB = 109;
+    TND = 110;
+    TRL = 111;
+    TRY = 112;
+    TTD = 113;
+    TWD = 114;
+    TZS = 115;
+    UAH = 116;
+    UGX = 117;
+    AED = 118;
+    UYU = 119;
+    UZS = 120;
+    VEF = 121;
+    VND = 122;
+    XCD = 123;
+    YER = 124;
+    ZAR = 125;
+    ZMW = 126;
+    ZWD = 127;
+    USD = 128;
+}
+

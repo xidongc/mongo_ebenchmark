@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package skupb;
+
+option go_package = "github.com/xidongc/mongodb_ebenchmark/model/sku/skupb";
+
+import "payment/paymentpb/payment.proto";
+import "google/api/annotations.proto";
+
+service SkuService{
+    rpc New (NewRequest) returns (Sku) {
+        option (google.api.http) = {
+        post: "/sku"
+        body: "*"
+    };
+    }
+    rpc Get (GetRequest) returns (Sku) {
+        option (google.api.http) = {
+        get: "/sku"
+        body: "*"
+    };
+    }
+    rpc Update (UpdateRequest) returns (Sku) {
+        option (google.api.http) = {
+        put: "/sku"
+        body: "*"
+    };
+    }
+    rpc Delete (DeleteRequest) returns (Empty) {
+        option (google.api.http) = {
+        delete: "/sku"
+        body: "*"
+    };
+    }
+}
+
+message NewRequest {
+    string name = 1;
+    paymentpb.Currency currency = 2;
+    bool active = 3;
+    uint64 price = 4;
+    string parent = 5;
+    map<string, string> metadata = 6;
+    string image = 7;
+    PackageDimensions packageDimensions = 8;
+    Inventory inventory = 9;
+    map<string, string> attributes = 10;
+}
+
+message Empty {
+
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message DeleteRequest {
+    string id = 1;
+}
+
+message UpdateRequest {
+    string id = 1;
+    string name = 2;
+    paymentpb.Currency currency = 3;
+    bool active = 4;
+    uint64 price = 5;
+    string parent = 6;
+    map<string, string> metadata = 7;
+    string image = 8;
+    PackageDimensions packageDimensions = 9;
+    Inventory inventory = 10;
+    map<string, string> attributes = 11;
+}
+
+message Sku {
+    int64 id = 1;
+    string name = 2;
+    uint64 price = 3;  // dollar
+    paymentpb.Currency currency = 4;
+    bool active = 5;
+    string productId = 6;
+    map<string, string> metadata = 7;
+    map<string, string> attributes = 8;
+    string image = 9;
+    PackageDimensions packageDimensions = 10;
+    repeated Inventory inventory = 11;
+    bool hasBattery = 12;
+    bool hasLiquid = 13;
+    bool hasSensitive = 14;
+    string description = 15;
+    string skuLabel = 16;
+    string supplier = 17;
+
+    int64 created = 998;
+    int64 updated = 999;
+}
+
+message Inventory {
+    int64 skuId = 1;
+    int64 warehouseId = 2;
+    int64 quantity = 3;  // available quantity
+    Type type = 4;
+    enum Type {
+        Infinite = 0;
+        Finite = 1;
+    }
+}
+
+message PackageDimensions {
+    double height = 1;
+    double length = 2;
+    double weight = 3;
+    double width = 4;
+}
+

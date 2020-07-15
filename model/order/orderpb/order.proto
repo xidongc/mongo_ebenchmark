@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+option go_package = "github.com/xidongc/mongodb_ebenchmark/model/order/orderpb";
+
+package orderpb;
+
+import "payment/paymentpb/payment.proto";
+import "google/api/annotations.proto";
+
+service OrderService {
+    rpc New(NewRequest) returns (Order) {
+        option (google.api.http) = {
+        post: "/order"
+        body: "*"
+    };
+    }
+    rpc Get(GetRequest) returns (Order) {
+        option (google.api.http) = {
+        get: "/order"
+        body: "*"
+    };
+    }
+    rpc Pay (PayRequest) returns (Order) {
+        option (google.api.http) = {
+        post: "/order/pay"
+        body: "*"
+    };
+    }
+    rpc Return (ReturnRequest) returns (Order) {
+        option (google.api.http) = {
+        post: "/order/return"
+        body: "*"
+    };
+    }
+}
+
+message NewRequest {
+    paymentpb.Currency currency = 1;
+    repeated Item items = 2;
+    map<string, string> metadata = 3;
+    string email = 4;
+    Shipping shipping = 5;
+}
+
+message GetRequest {
+    string id = 1;
+}
+
+message PayRequest {
+    paymentpb.Card card = 2;
+    paymentpb.PaymentProviderId paymentProviderId = 3;
+}
+
+message ReturnRequest {
+    string id = 1;
+}
+
+enum OrderStatus {
+    Created = 0;
+    Paid = 1;
+    Canceled = 2;
+    Fulfilled = 3;
+    Returned = 4;
+}
+
+message Order {
+    string id = 1;
+    uint64 customerId = 2;
+    repeated Item items = 3;
+    uint64 amount = 4; // price amount 1000 == 10.00
+    paymentpb.Currency currency = 5;
+    string chargeId = 6;
+    OrderStatus Status = 7;
+    Shipping shipping = 8;
+    string destination = 9;
+    map<string, string> metadata = 10;
+    int64 invoiceNumber = 11;
+
+    int64 created = 998;
+    int64 updated = 999;
+}
+
+enum Sensitivity {
+    General = 0;
+    Special = 1;
+    Sensitive = 2;
+    Prohibited = 3;
+}
+
+enum ItemType {
+    product = 0;
+    discount = 1;
+    tax = 2;
+    shipping = 3;
+}
+
+message Item {
+    string productId = 2;
+    string name = 3;
+    int64 quantity = 4;
+    int64 amount = 5;  // per item
+    paymentpb.Currency currency = 6;
+    string description = 7;
+    Sensitivity sensitivity = 8;
+    ItemType type = 9;
+}
+
+message Shipping {
+    string name = 1;
+    string phone = 2;
+    Address address = 3;
+    string carrier = 4;
+    string trackingNumber = 5;
+    message Address {
+        string line1 = 1;
+        string city = 2;
+        string country = 3;
+        string line2 = 4;
+        string postalCode = 5;
+        string state = 6;
+    }
+}
