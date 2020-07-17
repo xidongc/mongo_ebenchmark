@@ -62,7 +62,7 @@ func NewClient(config *Config) (client *Client, err error) {
 	return
 }
 
-func (client *Client) FindIter(filter bson.M) (err error) {
+func (client *Client) FindIter(filter bson.M, amp Amplifier) (err error) {
 	stream, err := bson.Marshal(filter)
 	if err != nil {
 		log.Errorf("%s: marshall filter error", "FindIter")
@@ -73,8 +73,6 @@ func (client *Client) FindIter(filter bson.M) (err error) {
 		Skip:        0,
 		Maxtimems:   -1,
 		Batchsize:   client.config.BatchSize,
-		Fields:      nil,
-		Hint:        nil,
 		Readpref:    client.config.ReadPref,
 		Findone:     false,
 		Partial:     false,
@@ -85,6 +83,9 @@ func (client *Client) FindIter(filter bson.M) (err error) {
 		FindIter,
 		client.Host,
 		runner.WithProtoset(ProtoFile),
+		runner.WithConcurrency(amp().Concurrency),
+		runner.WithConnections(amp().Connections),
+		runner.WithCPUs(amp().CPUs),
 		runner.WithData(request),
 		runner.WithInsecure(client.config.Insecure),
 		)
@@ -101,7 +102,7 @@ func (client *Client) FindIter(filter bson.M) (err error) {
 }
 
 func (client *Client) Insert() (err error) {
-
+	return
 }
 
 func (client *Client) HealthCheck() {

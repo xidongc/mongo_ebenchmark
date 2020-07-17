@@ -10,7 +10,7 @@ func main() {
 	client, _ := proxy.NewClient(nil)
 	var filter bson.M
 	filter = bson.M{}
-	if err := client.FindIter(filter); err != nil {
+	if err := client.FindIter(filter, proxy.MicroAmplifier); err != nil {
 		log.Error("error")
 	}
 }
