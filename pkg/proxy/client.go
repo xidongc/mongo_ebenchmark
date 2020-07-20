@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Find          = "mprpc.MongoProxy.FindIter"
+	Find          = "mprpc.MongoProxy.Find"
 	FindIter      = "mprpc.MongoProxy.FindIter"
 	Count         = "Count"
 	Explain       = "Explain"
@@ -19,10 +19,10 @@ const (
 	Bulk          = "Bulk"
 	Update        = "Update"
 	Remove        = "Remove"
-	Insert        = "Insert"
+	Insert        = "mprpc.MongoProxy.Insert"
 	FindAndModify = "FindAndModify"
 	Distinct      = "Distinct"
-	Healthcheck   = "Healthcheck"
+	Healthcheck   = "mprpc.MongoProxy.Healthcheck"
 )
 
 const (
@@ -39,7 +39,12 @@ type Client struct {
 	config *Config
 	Host string
 	Collection *mprpc.Collection
+	Turbo bool
 }
+
+type Empty struct {}
+
+type Documents []byte
 
 func NewClient(config *Config) (client *Client, err error) {
 	if config == nil {
@@ -101,10 +106,64 @@ func (client *Client) FindIter(filter bson.M, amp Amplifier) (err error) {
 	return
 }
 
-func (client *Client) Insert() (err error) {
+// TODO detect dup obj id, add amplify with different obj id
+func (client *Client) Insert(docs []interface{}, amp Amplifier) (err error) {
+
+	var rpcDocs []*mprpc.Document
+	for _, doc := range docs {
+		val, err := bson.Marshal(doc)
+		if err != nil {
+			log.Panicf("unable to marshall error: %s", err)
+		}
+		rpcDocs = append(rpcDocs, &mprpc.Document{
+			Val: val,
+		})
+	}
+	var wOptions *mprpc.WriteOptions
+	if client.Turbo {
+		wOptions = getTurboWriteOptions()
+	} else {
+		wOptions = getSafeWriteOptions()
+	}
+	request := mprpc.InsertOperation{
+		Collection:   client.Collection,
+		Documents:  rpcDocs,
+		Writeoptions: wOptions,
+	}
+	report, err := runner.Run(
+		Insert,
+		client.Host,
+		runner.WithProtoset(ProtoFile),
+		runner.WithConcurrency(amp().Concurrency),
+		runner.WithConnections(amp().Connections),
+		runner.WithCPUs(amp().CPUs),
+		runner.WithData(request),
+		runner.WithInsecure(client.config.Insecure),
+	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	p := printer.ReportPrinter{
+		Out:    os.Stdout,
+		Report: report,
+	}
+
+	_ = p.Print("pretty")
 	return
 }
 
-func (client *Client) HealthCheck() {
-
+func (client *Client) HealthCheck() (err error) {
+	log.Info("Start doing health check")
+	empty := Empty{}
+	_, err = runner.Run(
+		Healthcheck,
+		client.Host,
+		runner.WithProtoset(ProtoFile),
+		runner.WithData(empty),
+		runner.WithInsecure(client.config.Insecure),
+	)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return
 }

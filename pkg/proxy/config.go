@@ -1,6 +1,9 @@
 package proxy
 
-import "time"
+import (
+	"github.com/xidongc-wish/mongoproxy/mprpc"
+	"time"
+)
 
 type Amplifier func() *AmplifyOptions
 
@@ -43,4 +46,32 @@ func MicroAmplifier() (amplifier *AmplifyOptions) {
 	return
 }
 
+func StressAmplifier() (amplifier *AmplifyOptions) {
+	amplifier = & AmplifyOptions{
+		Connections: 10,
+		Concurrency: 100,
+		TotalRequest: 200,
+	}
+	return
+}
+
+// merge fsync and J: https://jira.mongodb.org/browse/SERVER-11399
+func getTurboWriteOptions() (wOptions *mprpc.WriteOptions) {
+	wOptions = &mprpc.WriteOptions{
+		Writeconcern: 1,
+		Writetimeout: 0,
+		Writemode: "",
+		J: false,
+	}
+	return
+}
+
+func getSafeWriteOptions() (wOptions *mprpc.WriteOptions) {
+	wOptions = &mprpc.WriteOptions{
+		Writetimeout: 0,
+		Writemode: "majority",
+		J: true,
+	}
+	return
+}
 
