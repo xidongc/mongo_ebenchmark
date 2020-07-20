@@ -1,27 +1,29 @@
 package proxy
 
 import (
+	"context"
 	"fmt"
 	"github.com/bojand/ghz/printer"
 	"github.com/bojand/ghz/runner"
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc-wish/mongoproxy/mprpc"
+	"google.golang.org/grpc"
 	"os"
 )
 
 const (
 	Find          = "mprpc.MongoProxy.Find"
 	FindIter      = "mprpc.MongoProxy.FindIter"
-	Count         = "Count"
-	Explain       = "Explain"
-	Aggregate     = "Aggregate"
-	Bulk          = "Bulk"
-	Update        = "Update"
-	Remove        = "Remove"
+	Count         = "mprpc.MongoProxy.Count"
+	Explain       = "mprpc.MongoProxy.Explain"
+	Aggregate     = "mprpc.MongoProxy.Aggregate"
+	Bulk          = "mprpc.MongoProxy.Bulk"
+	Update        = "mprpc.MongoProxy.Update"
+	Remove        = "mprpc.MongoProxy.Remove"
 	Insert        = "mprpc.MongoProxy.Insert"
-	FindAndModify = "FindAndModify"
-	Distinct      = "Distinct"
+	FindAndModify = "mprpc.MongoProxy.FindAndModify"
+	Distinct      = "mprpc.MongoProxy.Distinct"
 	Healthcheck   = "mprpc.MongoProxy.Healthcheck"
 )
 
@@ -40,6 +42,7 @@ type Client struct {
 	Host string
 	Collection *mprpc.Collection
 	Turbo bool
+	RpcClient mprpc.MongoProxyClient
 }
 
 type Empty struct {}
@@ -64,17 +67,26 @@ func NewClient(config *Config) (client *Client, err error) {
 		Database: Database,
 		Collection: Collection,
 	}
+	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connect to rpc server error: %s", err)
+	}
+	client.RpcClient = mprpc.NewMongoProxyClient(conn)
 	return
 }
 
-func (client *Client) FindIter(filter bson.M, amp Amplifier) (err error) {
-	stream, err := bson.Marshal(filter)
+func (client *Client) Close() (err error) {
+	return
+}
+
+func (client *Client) FindIter(ctx context.Context, filter bson.M, amp Amplifier) (stream mprpc.MongoProxy_FindIterClient, err error) {
+	filterBytes, err := bson.Marshal(filter)
 	if err != nil {
 		log.Errorf("%s: marshall filter error", "FindIter")
 	}
 	request := mprpc.FindQuery{
 		Collection:  client.Collection,
-		Filter:      stream,
+		Filter:      filterBytes,
 		Skip:        0,
 		Maxtimems:   -1,
 		Batchsize:   client.config.BatchSize,
@@ -83,6 +95,11 @@ func (client *Client) FindIter(filter bson.M, amp Amplifier) (err error) {
 		Partial:     false,
 		Comment:     FindIter,
 		Rpctimeout:  client.config.RpcTimeout,
+	}
+	stream, err = client.RpcClient.FindIter(ctx, &request)
+	if err != nil {
+		log.Fatalf("find iter call failed with: %s", err)
+		return
 	}
 	report, err := runner.Run(
 		FindIter,
@@ -107,7 +124,7 @@ func (client *Client) FindIter(filter bson.M, amp Amplifier) (err error) {
 }
 
 // TODO detect dup obj id, add amplify with different obj id
-func (client *Client) Insert(docs []interface{}, amp Amplifier) (err error) {
+func (client *Client) Insert(ctx context.Context, docs []interface{}, amp Amplifier) (err error) {
 
 	var rpcDocs []*mprpc.Document
 	for _, doc := range docs {
@@ -130,6 +147,11 @@ func (client *Client) Insert(docs []interface{}, amp Amplifier) (err error) {
 		Documents:  rpcDocs,
 		Writeoptions: wOptions,
 	}
+	if _, err = client.RpcClient.Insert(ctx, &request); err != nil {
+		log.Errorf("rpc insert error with: %s", err)
+		return
+	}
+
 	report, err := runner.Run(
 		Insert,
 		client.Host,
@@ -149,6 +171,10 @@ func (client *Client) Insert(docs []interface{}, amp Amplifier) (err error) {
 	}
 
 	_ = p.Print("pretty")
+	return
+}
+
+func (client *Client) Update() (err error) {
 	return
 }
 
