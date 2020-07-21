@@ -6,12 +6,14 @@ import (
 	"github.com/bojand/ghz/printer"
 	"github.com/bojand/ghz/runner"
 	log "github.com/sirupsen/logrus"
+	"github.com/xidongc-wish/mgo"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc-wish/mongoproxy/mprpc"
 	"google.golang.org/grpc"
 	"os"
 )
 
+// Function List in Proxy
 const (
 	Find          = "mprpc.MongoProxy.Find"
 	FindIter      = "mprpc.MongoProxy.FindIter"
@@ -37,18 +39,36 @@ const (
 	ProtoFile     = "/Users/derekchen/go/src/github.com/xidongc/mongodb_ebenchmark/pkg/proxy/rpc.protoset"
 )
 
+// Proxy Client
 type Client struct {
 	config *Config
 	Host string
 	Collection *mprpc.Collection
 	Turbo bool
-	RpcClient mprpc.MongoProxyClient
+	activeCon *grpc.ClientConn
+	rpcClient mprpc.MongoProxyClient
+	cancelFunc context.CancelFunc
+	isHealthy bool
 }
 
 type Empty struct {}
 
 type Documents []byte
 
+// Create simple query param for upper services
+type QueryParam struct {
+	Filter 			bson.M
+	Fields 			bson.M
+	Limit			int64
+	Skip 			int64
+	Sort 			[]string
+	Distinctkey 	string
+	FindOne			bool
+	UsingIndex		[]string
+	Amp 			Amplifier
+}
+
+// Create a new client based on provided config
 func NewClient(config *Config) (client *Client, err error) {
 	if config == nil {
 		config = DefaultConfig()
@@ -63,40 +83,69 @@ func NewClient(config *Config) (client *Client, err error) {
 		config: config,
 		Host: host,
 	}
-	client.Collection = &mprpc.Collection{
-		Database: Database,
-		Collection: Collection,
+	if client.Collection == nil {
+		client.Collection = &mprpc.Collection{
+			Database:   Database,
+			Collection: Collection,
+		}
 	}
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("connect to rpc server error: %s", err)
 	}
-	client.RpcClient = mprpc.NewMongoProxyClient(conn)
+	client.activeCon = conn
+	client.rpcClient = mprpc.NewMongoProxyClient(conn)
 	return
 }
 
+// Close a proxy client
 func (client *Client) Close() (err error) {
+	client.cancelFunc()
+	if err := client.activeCon.Close(); err != nil {
+		log.Fatalf("clean up failed: %s", err)
+	}
 	return
 }
 
-func (client *Client) FindIter(ctx context.Context, filter bson.M, amp Amplifier) (stream mprpc.MongoProxy_FindIterClient, err error) {
-	filterBytes, err := bson.Marshal(filter)
+func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []interface{}, err error) {
+	return
+}
+
+func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream mprpc.MongoProxy_FindIterClient, err error) {
+	filterBytes, err := bson.Marshal(query.Filter)
 	if err != nil {
-		log.Errorf("%s: marshall filter error", "FindIter")
+		log.Errorf("%s: marshall filter error", FindIter)
 	}
+	var readConcern string
+	var prefetch float64
+	var readPref mgo.Mode
+
+	if client.Turbo {
+		readConcern = "local"
+		prefetch = 0.75
+		readPref = mgo.Nearest
+	} else {
+		readConcern = "linearizable"
+		prefetch = 0.25
+		readPref = mgo.Primary
+	}
+
 	request := mprpc.FindQuery{
 		Collection:  client.Collection,
 		Filter:      filterBytes,
 		Skip:        0,
 		Maxtimems:   -1,
+		Maxscan: 	 0,
+		Prefetch:	 prefetch,
 		Batchsize:   client.config.BatchSize,
-		Readpref:    client.config.ReadPref,
+		Readpref:    int32(readPref),
 		Findone:     false,
-		Partial:     false,
+		Partial:     client.config.AllowPartial,
+		Readconcern: readConcern,
 		Comment:     FindIter,
 		Rpctimeout:  client.config.RpcTimeout,
 	}
-	stream, err = client.RpcClient.FindIter(ctx, &request)
+	stream, err = client.rpcClient.FindIter(ctx, &request)
 	if err != nil {
 		log.Fatalf("find iter call failed with: %s", err)
 		return
@@ -105,9 +154,9 @@ func (client *Client) FindIter(ctx context.Context, filter bson.M, amp Amplifier
 		FindIter,
 		client.Host,
 		runner.WithProtoset(ProtoFile),
-		runner.WithConcurrency(amp().Concurrency),
-		runner.WithConnections(amp().Connections),
-		runner.WithCPUs(amp().CPUs),
+		runner.WithConcurrency(query.Amp().Concurrency),
+		runner.WithConnections(query.Amp().Connections),
+		runner.WithCPUs(query.Amp().CPUs),
 		runner.WithData(request),
 		runner.WithInsecure(client.config.Insecure),
 		)
@@ -120,6 +169,30 @@ func (client *Client) FindIter(ctx context.Context, filter bson.M, amp Amplifier
 	}
 
 	_ = p.Print("pretty")
+	return
+}
+
+func (client *Client) Count(ctx context.Context, query *QueryParam) (count uint64, err error) {
+	return
+}
+
+func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFields bson.M, err error){
+	return
+}
+
+func (client *Client) Aggregate(ctx context.Context, query *mprpc.AggregateQuery) (documents []interface{}, err error){
+	return
+}
+
+func (client *Client) Bulk(ctx context.Context, steps *mprpc.BulkOperation) (err error) {
+	return
+}
+
+func (client *Client) Update(ctx context.Context, steps *mprpc.UpdateOperation) (changeInfo *mprpc.ChangeInfo, err error) {
+	return
+}
+
+func (client *Client) Remove(ctx context.Context, steps *mprpc.RemoveOperation) (changeInfo *mprpc.ChangeInfo, err error) {
 	return
 }
 
@@ -147,7 +220,7 @@ func (client *Client) Insert(ctx context.Context, docs []interface{}, amp Amplif
 		Documents:  rpcDocs,
 		Writeoptions: wOptions,
 	}
-	if _, err = client.RpcClient.Insert(ctx, &request); err != nil {
+	if _, err = client.rpcClient.Insert(ctx, &request); err != nil {
 		log.Errorf("rpc insert error with: %s", err)
 		return
 	}
@@ -174,7 +247,45 @@ func (client *Client) Insert(ctx context.Context, docs []interface{}, amp Amplif
 	return
 }
 
-func (client *Client) Update() (err error) {
+func (client *Client) FindAndModify(ctx context.Context,
+									filter bson.M,
+									update bson.M,
+									amp Amplifier) (err error) {
+	filterBytes, err := bson.Marshal(filter)
+	if err != nil {
+		log.Errorf("%s: marshall filter error", FindAndModify)
+	}
+
+	updateBytes, err := bson.Marshal(update)
+	if err != nil {
+		log.Errorf("%s: marshall filter error", FindAndModify)
+	}
+
+	var wOptions *mprpc.WriteOptions
+	if client.Turbo {
+		wOptions = getTurboWriteOptions()
+	} else {
+		wOptions = getSafeWriteOptions()
+	}
+
+	request := mprpc.FindAndModifyOperation{
+		Collection:   client.Collection,
+		Filter:       filterBytes,
+		Update:       updateBytes,
+		Upsert:       true,
+		New:          true,
+		Fields:       nil,
+		Writeoptions: wOptions,
+	}
+
+	singleDoc, err := client.rpcClient.FindAndModify(ctx, &request)
+
+	log.Info(singleDoc)
+
+	return
+}
+
+func (client *Client) Distinct(ctx context.Context, query *QueryParam) (distinctKeys []interface{}, err error) {
 	return
 }
 

@@ -8,12 +8,13 @@ import (
 type Amplifier func() *AmplifyOptions
 
 type Config struct {
-	ServerIp 	string	`short:"s" long:"server" default:"10.88.30.82" description:"server ip address"`
-	Port		int		`short:"p" long:"port" default:"31024" description:"rpc server port"`
-	Insecure	bool	`short:"p" long:"port" default:"31024" description:"rpc server port"`
-	RpcTimeout  int64
-	BatchSize   int64
-	ReadPref    int32
+	ServerIp 		string	`short:"s" long:"server" default:"10.88.30.82" description:"server ip address"`
+	Port			int		`short:"p" long:"port" default:"31024" description:"rpc server port"`
+	Insecure		bool	`short:"p" long:"port" default:"31024" description:"rpc server port"`
+	RpcTimeout  	int64
+	BatchSize   	int64
+	ReadPref    	int32
+	AllowPartial 	bool
 }
 
 type AmplifyOptions struct {
