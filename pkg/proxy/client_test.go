@@ -10,11 +10,21 @@ import (
 
 // Test on basic proxy operations
 func TestClientOps(t *testing.T) {
-	client, _ := NewClient(nil)
+	ctx, cancel := context.WithCancel(context.Background())
+	client, _ := NewClient(nil, "test", cancel)
+
+	defer func() {
+		err := client.Close()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+	if err := client.HealthCheck(); err != nil {
+		panic(err)
+	}
 
 	t.Run(Insert, func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
 		sku := skupb.Inventory{
 			SkuId: 123,
 			WarehouseId: 345,
@@ -23,18 +33,24 @@ func TestClientOps(t *testing.T) {
 		}
 		skus := make([]interface{}, 1)
 		skus[0] = sku
-		if err := client.Insert(ctx, skus, MicroAmplifier); err != nil {
+		param := &InsertParam{
+			Docs: skus,
+			Amp:  MicroAmplifier,
+		}
+		if err := client.Insert(ctx, param); err != nil {
 			t.Error("error")
 		}
 	})
 
 	t.Run(FindIter, func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		var filter bson.M
+		queryParam := &QueryParam{
+			Filter:      bson.M{},
+			Amp:         MicroAmplifier,
+		}
+
 		var documents []interface{}
-		filter = bson.M{}
-		stream, err := client.FindIter(ctx, filter, MicroAmplifier)
+
+		stream, err := client.FindIter(ctx, queryParam)
 		if err != nil {
 			t.Error("error")
 		}
@@ -65,5 +81,19 @@ func TestClientOps(t *testing.T) {
 			}
 		}
 		t.Log(documents)
+	})
+
+	t.Run(Update, func(t *testing.T) {
+		updateParam := &UpdateParam{
+			Filter:      bson.M{"skuid": 123},
+			Update:      bson.M{"skuid": 124},
+			Multi: 		 false,
+			Amp:         MicroAmplifier,
+		}
+		changeInfo, err := client.Update(ctx, updateParam)
+		if err != nil {
+			t.Error(err)
+		}
+		t.Log(changeInfo)
 	})
 }

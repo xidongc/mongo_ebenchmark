@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"github.com/xidongc-wish/mgo"
 	"github.com/xidongc-wish/mongoproxy/mprpc"
 	"time"
 )
@@ -26,6 +27,7 @@ type AmplifyOptions struct {
 	CPUs            uint
 }
 
+// Create default config
 func DefaultConfig() (config *Config) {
 	config = &Config{
 		ServerIp: "127.0.0.1",
@@ -33,7 +35,8 @@ func DefaultConfig() (config *Config) {
 		Insecure: true,
 		RpcTimeout: 25000,
 		BatchSize: 10000,
-		ReadPref: 5,
+		ReadPref: int32(mgo.Primary),
+		AllowPartial: false,
 	}
 	return
 }

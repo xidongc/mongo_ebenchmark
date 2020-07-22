@@ -29,14 +29,24 @@ const (
 	Healthcheck   = "mprpc.MongoProxy.Healthcheck"
 )
 
+// Database used for ebenchmark
 const (
-	Database 	  = "mpc"
-	Collection 	  = "mpc"
+	Database 	  = "ebenchmark"
+	Collection 	  = "default"
 )
 
 // TODO define as const, should be in env
 const (
 	ProtoFile     = "/Users/derekchen/go/src/github.com/xidongc/mongodb_ebenchmark/pkg/proxy/rpc.protoset"
+)
+
+type FindAndModifyMode int
+
+// Mode for FindAndModify
+const (
+	FindAndDelete 	FindAndModifyMode = 0
+	FindAndUpdate   FindAndModifyMode = 1
+	FindAndUpsert   FindAndModifyMode = 2
 )
 
 // Proxy Client
@@ -53,9 +63,7 @@ type Client struct {
 
 type Empty struct {}
 
-type Documents []byte
-
-// Create simple query param for upper services
+// Query param for upper services
 type QueryParam struct {
 	Filter 			bson.M
 	Fields 			bson.M
@@ -68,10 +76,49 @@ type QueryParam struct {
 	Amp 			Amplifier
 }
 
+// Insert param for upper services
+type InsertParam struct {
+	Docs 			[]interface{}
+	Amp 			Amplifier
+}
+
+// Remove param for upper services
+type RemoveParam struct {
+	Filter			bson.M
+	Amp 			Amplifier
+}
+
+// Update param for upper services
+type UpdateParam struct {
+	Filter			bson.M
+	Update			bson.M
+	Upsert          bool
+	Multi           bool
+	Amp 			Amplifier
+}
+
+// FindAndModify param for upper services
+type FindModifyParam struct {
+	Filter			bson.M
+	Desired			bson.M
+	Mode			FindAndModifyMode
+	SortRule		[]string
+	Fields 			bson.M
+	Amp 			Amplifier
+}
+
+// Aggregate param for upper services
+type AggregateParam struct {
+	Pipeline 		bson.M 
+}
+
 // Create a new client based on provided config
-func NewClient(config *Config) (client *Client, err error) {
+func NewClient(config *Config, namespace string, cancel context.CancelFunc) (client *Client, err error) {
 	if config == nil {
 		config = DefaultConfig()
+	}
+	if namespace == "" {
+		namespace = Collection
 	}
 	if config.Port < 0 || config.Port == 0 {
 		log.Warning("port not defined properly, set back to default")
@@ -86,7 +133,7 @@ func NewClient(config *Config) (client *Client, err error) {
 	if client.Collection == nil {
 		client.Collection = &mprpc.Collection{
 			Database:   Database,
-			Collection: Collection,
+			Collection: namespace,
 		}
 	}
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
@@ -95,14 +142,20 @@ func NewClient(config *Config) (client *Client, err error) {
 	}
 	client.activeCon = conn
 	client.rpcClient = mprpc.NewMongoProxyClient(conn)
+	if cancel == nil {
+		log.Warning("handle context exit in application")
+	}
+	client.cancelFunc = cancel
 	return
 }
 
 // Close a proxy client
 func (client *Client) Close() (err error) {
-	client.cancelFunc()
 	if err := client.activeCon.Close(); err != nil {
 		log.Fatalf("clean up failed: %s", err)
+	}
+	if client.cancelFunc != nil {
+		client.cancelFunc()
 	}
 	return
 }
@@ -180,27 +233,51 @@ func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFi
 	return
 }
 
-func (client *Client) Aggregate(ctx context.Context, query *mprpc.AggregateQuery) (documents []interface{}, err error){
+func (client *Client) Aggregate(ctx context.Context, query *AggregateParam) (documents []interface{}, err error){
 	return
 }
 
-func (client *Client) Bulk(ctx context.Context, steps *mprpc.BulkOperation) (err error) {
+func (client *Client) Update(ctx context.Context, param *UpdateParam) (changeInfo *mprpc.ChangeInfo, err error) {
+	var wOptions *mprpc.WriteOptions
+	if client.Turbo {
+		wOptions = getTurboWriteOptions()
+	} else {
+		wOptions = getSafeWriteOptions()
+	}
+
+	filter, err := bson.Marshal(param.Filter)
+	if err != nil {
+		log.Fatal(err)
+	}
+	update, err := bson.Marshal(param.Update)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	request := &mprpc.UpdateOperation{
+		Collection:   client.Collection,
+		Filter:       filter,
+		Update:       update,
+		Upsert:       param.Upsert,
+		Multi:        param.Multi,
+		Writeoptions: wOptions,
+	}
+
+	changeInfo, err = client.rpcClient.Update(ctx, request)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return
 }
 
-func (client *Client) Update(ctx context.Context, steps *mprpc.UpdateOperation) (changeInfo *mprpc.ChangeInfo, err error) {
+func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInfo *mprpc.ChangeInfo, err error) {
 	return
 }
 
-func (client *Client) Remove(ctx context.Context, steps *mprpc.RemoveOperation) (changeInfo *mprpc.ChangeInfo, err error) {
-	return
-}
-
-// TODO detect dup obj id, add amplify with different obj id
-func (client *Client) Insert(ctx context.Context, docs []interface{}, amp Amplifier) (err error) {
+func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error) {
 
 	var rpcDocs []*mprpc.Document
-	for _, doc := range docs {
+	for _, doc := range param.Docs {
 		val, err := bson.Marshal(doc)
 		if err != nil {
 			log.Panicf("unable to marshall error: %s", err)
@@ -229,9 +306,9 @@ func (client *Client) Insert(ctx context.Context, docs []interface{}, amp Amplif
 		Insert,
 		client.Host,
 		runner.WithProtoset(ProtoFile),
-		runner.WithConcurrency(amp().Concurrency),
-		runner.WithConnections(amp().Connections),
-		runner.WithCPUs(amp().CPUs),
+		runner.WithConcurrency(param.Amp().Concurrency),
+		runner.WithConnections(param.Amp().Connections),
+		runner.WithCPUs(param.Amp().CPUs),
 		runner.WithData(request),
 		runner.WithInsecure(client.config.Insecure),
 	)
@@ -247,16 +324,13 @@ func (client *Client) Insert(ctx context.Context, docs []interface{}, amp Amplif
 	return
 }
 
-func (client *Client) FindAndModify(ctx context.Context,
-									filter bson.M,
-									update bson.M,
-									amp Amplifier) (err error) {
-	filterBytes, err := bson.Marshal(filter)
+func (client *Client) FindAndModify(ctx context.Context, param *FindModifyParam) (singleDoc interface{}, err error) {
+	filterBytes, err := bson.Marshal(param.Filter)
 	if err != nil {
 		log.Errorf("%s: marshall filter error", FindAndModify)
 	}
 
-	updateBytes, err := bson.Marshal(update)
+	updateBytes, err := bson.Marshal(param.Desired)
 	if err != nil {
 		log.Errorf("%s: marshall filter error", FindAndModify)
 	}
@@ -278,7 +352,7 @@ func (client *Client) FindAndModify(ctx context.Context,
 		Writeoptions: wOptions,
 	}
 
-	singleDoc, err := client.rpcClient.FindAndModify(ctx, &request)
+	singleDoc, err = client.rpcClient.FindAndModify(ctx, &request)
 
 	log.Info(singleDoc)
 
