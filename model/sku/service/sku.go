@@ -1,4 +1,4 @@
-package service
+package sku
 
 import (
 	"context"
@@ -6,67 +6,62 @@ import (
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongodb_ebenchmark/model/sku/skupb"
 	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
-	"time"
 )
 
-type skuService struct {
+type Service struct {
 	storage proxy.Client
 	amplifier proxy.Amplifier
 }
 
-func (s *skuService) New(req *skupb.NewRequest) (sku *skupb.Sku, err error){
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func (s *Service) Get(context.Context, *skupb.GetRequest) (*skupb.Sku, error) {
+	panic("implement me")
+}
 
-	var documents []interface{}
+func (s *Service) Update(context.Context, *skupb.UpdateRequest) (*skupb.Sku, error) {
+	panic("implement me")
+}
 
-	stream, err := s.storage.FindIter(ctx, bson.M{"name": req.GetName()}, s.amplifier)
+func (s *Service) Delete(context.Context, *skupb.DeleteRequest) (*skupb.Empty, error) {
+	panic("implement me")
+}
+
+func (s *Service) New(ctx context.Context, req *skupb.NewRequest) (sku *skupb.Sku, err error){
+
+	updateQuery := bson.M{
+		"name":			     req.GetName(),
+		"price":             req.GetPrice(),
+		"currency":          req.GetCurrency(),
+		"active":            req.GetActive(),
+		"productid":		 req.GetParent(),
+		"image":             req.GetImage(),
+		"metadata":          req.GetMetadata(),
+		"packagedimensions": req.GetPackageDimensions(),
+		"attibutes": 	     req.GetAttributes(),
+	}
+
+	param := &proxy.UpdateParam{
+		Filter: bson.M{"name": req.GetName()},
+		Update: updateQuery,
+		Upsert: true,
+		Multi:  false,
+		Amp:    s.amplifier,
+	}
+
+	changeInfo, err := s.storage.Update(ctx, param)
 	if err != nil {
 		log.Error("error")
 	}
-	for {
-		if stream == nil {
-			break
-		}
-		rs, err := stream.Recv()
-		if err != nil {
-			break
-		}
-		tmpDocs := make(chan interface{}, len(rs.Results))
-		if len(rs.Results) > 0 {
-			for _, document := range rs.Results {
-				var doc bson.D
-				if err := bson.Unmarshal(document.Val, &doc); err != nil {
-					log.Fatal(err)
-				}
-				tmpDocs <- doc
-			}
 
-			for i := 0; i < len(rs.Results); i++ {
-				doc := <-tmpDocs
-				documents = append(documents, doc)
-			}
-		} else {
-			time.Sleep(5 * time.Millisecond)
-		}
-	}
-	log.Info(documents)
+	log.Info(changeInfo)
 
 
 	if err != nil {
 		log.Errorf("sku error: storage failed with %s", err)
 	}
 
-	sku = &skupb.Sku{
-		Name:			   req.GetName(),
-		Currency:          req.GetCurrency(),
-		Active:            req.GetActive(),
-		Price:             req.GetPrice(),
-		ProductId:		   req.GetParent(),
-		Image:             req.GetImage(),
-		Metadata:          req.GetMetadata(),
-		PackageDimensions: req.GetPackageDimensions(),
-		Attributes: 	   req.GetAttributes(),
-	}
 	return
+}
+
+func RegisterService() {
+
 }

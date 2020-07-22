@@ -7,9 +7,13 @@
 package skupb
 
 import (
+	context "context"
 	proto "github.com/golang/protobuf/proto"
 	paymentpb "github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -1143,4 +1147,192 @@ func file_sku_skupb_sku_proto_init() {
 	file_sku_skupb_sku_proto_rawDesc = nil
 	file_sku_skupb_sku_proto_goTypes = nil
 	file_sku_skupb_sku_proto_depIdxs = nil
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// SkuServiceClient is the client API for SkuService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type SkuServiceClient interface {
+	New(ctx context.Context, in *NewRequest, opts ...grpc.CallOption) (*Sku, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Sku, error)
+	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Sku, error)
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*Empty, error)
+}
+
+type skuServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSkuServiceClient(cc grpc.ClientConnInterface) SkuServiceClient {
+	return &skuServiceClient{cc}
+}
+
+func (c *skuServiceClient) New(ctx context.Context, in *NewRequest, opts ...grpc.CallOption) (*Sku, error) {
+	out := new(Sku)
+	err := c.cc.Invoke(ctx, "/skupb.SkuService/New", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skuServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Sku, error) {
+	out := new(Sku)
+	err := c.cc.Invoke(ctx, "/skupb.SkuService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skuServiceClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*Sku, error) {
+	out := new(Sku)
+	err := c.cc.Invoke(ctx, "/skupb.SkuService/Update", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *skuServiceClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/skupb.SkuService/Delete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SkuServiceServer is the server API for SkuService service.
+type SkuServiceServer interface {
+	New(context.Context, *NewRequest) (*Sku, error)
+	Get(context.Context, *GetRequest) (*Sku, error)
+	Update(context.Context, *UpdateRequest) (*Sku, error)
+	Delete(context.Context, *DeleteRequest) (*Empty, error)
+}
+
+// UnimplementedSkuServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedSkuServiceServer struct {
+}
+
+func (*UnimplementedSkuServiceServer) New(context.Context, *NewRequest) (*Sku, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method New not implemented")
+}
+func (*UnimplementedSkuServiceServer) Get(context.Context, *GetRequest) (*Sku, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedSkuServiceServer) Update(context.Context, *UpdateRequest) (*Sku, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+}
+func (*UnimplementedSkuServiceServer) Delete(context.Context, *DeleteRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+}
+
+func RegisterSkuServiceServer(s *grpc.Server, srv SkuServiceServer) {
+	s.RegisterService(&_SkuService_serviceDesc, srv)
+}
+
+func _SkuService_New_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkuServiceServer).New(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/skupb.SkuService/New",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkuServiceServer).New(ctx, req.(*NewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkuService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkuServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/skupb.SkuService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkuServiceServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkuService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkuServiceServer).Update(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/skupb.SkuService/Update",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkuServiceServer).Update(ctx, req.(*UpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SkuService_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SkuServiceServer).Delete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/skupb.SkuService/Delete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SkuServiceServer).Delete(ctx, req.(*DeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _SkuService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "skupb.SkuService",
+	HandlerType: (*SkuServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "New",
+			Handler:    _SkuService_New_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _SkuService_Get_Handler,
+		},
+		{
+			MethodName: "Update",
+			Handler:    _SkuService_Update_Handler,
+		},
+		{
+			MethodName: "Delete",
+			Handler:    _SkuService_Delete_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "sku/skupb/sku.proto",
 }

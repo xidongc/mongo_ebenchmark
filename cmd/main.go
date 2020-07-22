@@ -3,8 +3,17 @@ package main
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
+	sku "github.com/xidongc/mongodb_ebenchmark/model/sku/service"
+	"github.com/xidongc/mongodb_ebenchmark/model/sku/skupb"
 	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
+	"google.golang.org/grpc"
 )
+
+func registerServices(server *grpc.Server) {
+	// TODO
+	skupb.RegisterSkuServiceServer(server, &sku.Service{})
+
+}
 
 func main() {
 	_, cancel := context.WithCancel(context.Background())
