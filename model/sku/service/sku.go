@@ -76,10 +76,7 @@ func (s *Service) New(ctx context.Context, req *skupb.NewRequest) (sku *skupb.Sk
 	return
 }
 
-func NewSKUService(config *proxy.Config, amplifier proxy.Amplifier, cancel context.CancelFunc) *Service{
-	client, _ := proxy.NewClient(config, ns, cancel)
-	return &Service {
-		Storage: *client,
-		Amplifier: amplifier,
-	}
+func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+	client, _ = proxy.NewClient(config, ns, cancel)
+	return
 }

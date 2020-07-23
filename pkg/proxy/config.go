@@ -9,22 +9,22 @@ import (
 type Amplifier func() *AmplifyOptions
 
 type Config struct {
-	ServerIp 		string	`short:"s" long:"server" default:"10.88.30.82" description:"server ip address"`
-	Port			int		`short:"p" long:"port" default:"31024" description:"rpc server port"`
-	Insecure		bool	`short:"p" long:"port" default:"31024" description:"rpc server port"`
-	RpcTimeout  	int64
-	BatchSize   	int64
-	ReadPref    	int32
-	AllowPartial 	bool
+	ServerIp 		string			`short:"s" long:"storage" default:"127.0.0.1" description:"storage server address"`
+	Port			int				`short:"p" long:"port" default:"50051" description:"storage server port"`
+	Insecure		bool			`long:"insecure" description:"storage server connection secure"`
+	RpcTimeout  	int64			`short:"t" long:"timeout" default:"25000" description:"request timeout"`
+	BatchSize   	int64			`short:"b" long:"batch" default:"10000" description:"batch size"`
+	ReadPref    	int32			`short:"r" long:"readpref" default:"2" description:"read preference"`
+	AllowPartial 	bool			`long:"partial" description:"allow partial"`
 }
 
 type AmplifyOptions struct {
-	Connections     uint
-	Concurrency		uint
-	TotalRequest    uint
-	QPS				uint
-	Timeout			time.Duration
-	CPUs            uint
+	Connections     uint			`long:"connections" default:"1" description:"storage server address"`
+	Concurrency		uint			`long:"concurrency" default:"5" description:"storage server address"`
+	TotalRequest    uint			`long:"requests" default:"20" description:"storage server address"`
+	QPS				uint			`long:"qps" description:"storage server address"`
+	Timeout			time.Duration	`long:"timeout" description:"storage server address"`
+	CPUs            uint			`long:"cpu" default:"1" description:"storage server address"`
 }
 
 // Create default config

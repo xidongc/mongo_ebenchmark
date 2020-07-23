@@ -7,8 +7,12 @@
 package paymentpb
 
 import (
+	context "context"
 	proto "github.com/golang/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -1513,4 +1517,156 @@ func file_paymentpb_payment_proto_init() {
 	file_paymentpb_payment_proto_rawDesc = nil
 	file_paymentpb_payment_proto_goTypes = nil
 	file_paymentpb_payment_proto_depIdxs = nil
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// PaymentServiceClient is the client API for PaymentService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type PaymentServiceClient interface {
+	NewCharge(ctx context.Context, in *ChargeRequest, opts ...grpc.CallOption) (*Charge, error)
+	RefundCharge(ctx context.Context, in *RefundRequest, opts ...grpc.CallOption) (*Charge, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Charge, error)
+}
+
+type paymentServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewPaymentServiceClient(cc grpc.ClientConnInterface) PaymentServiceClient {
+	return &paymentServiceClient{cc}
+}
+
+func (c *paymentServiceClient) NewCharge(ctx context.Context, in *ChargeRequest, opts ...grpc.CallOption) (*Charge, error) {
+	out := new(Charge)
+	err := c.cc.Invoke(ctx, "/paymentpb.PaymentService/NewCharge", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) RefundCharge(ctx context.Context, in *RefundRequest, opts ...grpc.CallOption) (*Charge, error) {
+	out := new(Charge)
+	err := c.cc.Invoke(ctx, "/paymentpb.PaymentService/RefundCharge", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *paymentServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Charge, error) {
+	out := new(Charge)
+	err := c.cc.Invoke(ctx, "/paymentpb.PaymentService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// PaymentServiceServer is the server API for PaymentService service.
+type PaymentServiceServer interface {
+	NewCharge(context.Context, *ChargeRequest) (*Charge, error)
+	RefundCharge(context.Context, *RefundRequest) (*Charge, error)
+	Get(context.Context, *GetRequest) (*Charge, error)
+}
+
+// UnimplementedPaymentServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedPaymentServiceServer struct {
+}
+
+func (*UnimplementedPaymentServiceServer) NewCharge(context.Context, *ChargeRequest) (*Charge, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NewCharge not implemented")
+}
+func (*UnimplementedPaymentServiceServer) RefundCharge(context.Context, *RefundRequest) (*Charge, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RefundCharge not implemented")
+}
+func (*UnimplementedPaymentServiceServer) Get(context.Context, *GetRequest) (*Charge, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+
+func RegisterPaymentServiceServer(s *grpc.Server, srv PaymentServiceServer) {
+	s.RegisterService(&_PaymentService_serviceDesc, srv)
+}
+
+func _PaymentService_NewCharge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChargeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).NewCharge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/paymentpb.PaymentService/NewCharge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).NewCharge(ctx, req.(*ChargeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_RefundCharge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefundRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).RefundCharge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/paymentpb.PaymentService/RefundCharge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).RefundCharge(ctx, req.(*RefundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PaymentService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PaymentServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/paymentpb.PaymentService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PaymentServiceServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _PaymentService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "paymentpb.PaymentService",
+	HandlerType: (*PaymentServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "NewCharge",
+			Handler:    _PaymentService_NewCharge_Handler,
+		},
+		{
+			MethodName: "RefundCharge",
+			Handler:    _PaymentService_RefundCharge_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _PaymentService_Get_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "paymentpb/payment.proto",
 }
