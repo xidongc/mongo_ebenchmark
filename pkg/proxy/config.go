@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type Amplifier func() *AmplifyOptions
+type Amplifier *AmplifyOptions
 
 type Config struct {
 	ServerIp 		string			`short:"s" long:"storage" default:"127.0.0.1" description:"storage server address"`
@@ -57,6 +57,10 @@ func StressAmplifier() (amplifier *AmplifyOptions) {
 		TotalRequest: 200,
 	}
 	return
+}
+
+func Amplifer(options AmplifyOptions) *AmplifyOptions{
+	return &options
 }
 
 // merge fsync and J: https://jira.mongodb.org/browse/SERVER-11399

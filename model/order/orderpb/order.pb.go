@@ -7,9 +7,13 @@
 package orderpb
 
 import (
+	context "context"
 	proto "github.com/golang/protobuf/proto"
 	paymentpb "github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
+	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -1161,4 +1165,192 @@ func file_order_orderpb_order_proto_init() {
 	file_order_orderpb_order_proto_rawDesc = nil
 	file_order_orderpb_order_proto_goTypes = nil
 	file_order_orderpb_order_proto_depIdxs = nil
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConnInterface
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion6
+
+// OrderServiceClient is the client API for OrderService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type OrderServiceClient interface {
+	New(ctx context.Context, in *NewRequest, opts ...grpc.CallOption) (*Order, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Order, error)
+	Pay(ctx context.Context, in *PayRequest, opts ...grpc.CallOption) (*Order, error)
+	Return(ctx context.Context, in *ReturnRequest, opts ...grpc.CallOption) (*Order, error)
+}
+
+type orderServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewOrderServiceClient(cc grpc.ClientConnInterface) OrderServiceClient {
+	return &orderServiceClient{cc}
+}
+
+func (c *orderServiceClient) New(ctx context.Context, in *NewRequest, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := c.cc.Invoke(ctx, "/orderpb.OrderService/New", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := c.cc.Invoke(ctx, "/orderpb.OrderService/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) Pay(ctx context.Context, in *PayRequest, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := c.cc.Invoke(ctx, "/orderpb.OrderService/Pay", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *orderServiceClient) Return(ctx context.Context, in *ReturnRequest, opts ...grpc.CallOption) (*Order, error) {
+	out := new(Order)
+	err := c.cc.Invoke(ctx, "/orderpb.OrderService/Return", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// OrderServiceServer is the server API for OrderService service.
+type OrderServiceServer interface {
+	New(context.Context, *NewRequest) (*Order, error)
+	Get(context.Context, *GetRequest) (*Order, error)
+	Pay(context.Context, *PayRequest) (*Order, error)
+	Return(context.Context, *ReturnRequest) (*Order, error)
+}
+
+// UnimplementedOrderServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedOrderServiceServer struct {
+}
+
+func (*UnimplementedOrderServiceServer) New(context.Context, *NewRequest) (*Order, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method New not implemented")
+}
+func (*UnimplementedOrderServiceServer) Get(context.Context, *GetRequest) (*Order, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedOrderServiceServer) Pay(context.Context, *PayRequest) (*Order, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Pay not implemented")
+}
+func (*UnimplementedOrderServiceServer) Return(context.Context, *ReturnRequest) (*Order, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Return not implemented")
+}
+
+func RegisterOrderServiceServer(s *grpc.Server, srv OrderServiceServer) {
+	s.RegisterService(&_OrderService_serviceDesc, srv)
+}
+
+func _OrderService_New_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).New(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/orderpb.OrderService/New",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).New(ctx, req.(*NewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/orderpb.OrderService/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_Pay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PayRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).Pay(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/orderpb.OrderService/Pay",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).Pay(ctx, req.(*PayRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OrderService_Return_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReturnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OrderServiceServer).Return(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/orderpb.OrderService/Return",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OrderServiceServer).Return(ctx, req.(*ReturnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _OrderService_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "orderpb.OrderService",
+	HandlerType: (*OrderServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "New",
+			Handler:    _OrderService_New_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _OrderService_Get_Handler,
+		},
+		{
+			MethodName: "Pay",
+			Handler:    _OrderService_Pay_Handler,
+		},
+		{
+			MethodName: "Return",
+			Handler:    _OrderService_Return_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "order/orderpb/order.proto",
 }

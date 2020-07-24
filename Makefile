@@ -2,6 +2,7 @@ protoc -I include/googleapis -I model -I model/sku/skupb --go_out=plugins=grpc:$
 protoc -I include/googleapis -I model/payment --go_out=plugins=grpc:$(go env GOPATH)/src model/payment/paymentpb/payment.proto
 protoc -I include/googleapis -I model -I model/product/productpb --go_out=plugins=grpc:$(go env GOPATH)/src model/product/productpb/product.proto
 protoc -I include/googleapis -I model -I model/user/userpb --go_out=plugins=grpc:$(go env GOPATH)/src model/user/userpb/user.proto
+protoc -I include/googleapis -I model -I model/order/orderpb --go_out=plugins=grpc:$(go env GOPATH)/src model/order/orderpb/order.proto
 
 ghz --insecure --protoset ./pkg/proxy/rpc.protoset --call mprpc.MongoProxy.Healthcheck -d {} -c 5 -n 20 0.0.0.0:50051
 ghz --insecure --protoset ./pkg/proxy/rpc.protoset --call mprpc.MongoProxy.Insert -d '[{"documents":[{"val":"WQAAAAdfaWQAXw\/F2PfpmwABuq0PAnN0YXRlAAcAAABhY3RpdmUAAm5hbWUACQAAAHhpZG9uZ2MzAAJtc2dzAAgAAABzdWNjZXNzABBudW1iZXIAAwAAAAA="}],"writeoptions":{"rpctimeout":30000,"writetimeout":null,"j":null,"fsync":null,"writeconcern":1},"collection":{"collection":"mpc","database":"mpc"}}]' -c 1 -n 1 0.0.0.0:50051
