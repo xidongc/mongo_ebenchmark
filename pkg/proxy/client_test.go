@@ -35,7 +35,7 @@ func TestClientOps(t *testing.T) {
 		skus[0] = sku
 		param := &InsertParam{
 			Docs: skus,
-			Amp:  MicroAmplifier,
+			Amp:  MicroAmplifier(),
 		}
 		if err := client.Insert(ctx, param); err != nil {
 			t.Error("error")
@@ -45,7 +45,7 @@ func TestClientOps(t *testing.T) {
 	t.Run(FindIter, func(t *testing.T) {
 		queryParam := &QueryParam{
 			Filter:      bson.M{},
-			Amp:         MicroAmplifier,
+			Amp:         MicroAmplifier(),
 		}
 
 		var documents []interface{}
@@ -88,7 +88,7 @@ func TestClientOps(t *testing.T) {
 			Filter:      bson.M{"skuid": 123},
 			Update:      bson.M{"skuid": 124},
 			Multi: 		 false,
-			Amp:         MicroAmplifier,
+			Amp:         MicroAmplifier(),
 		}
 		changeInfo, err := client.Update(ctx, updateParam)
 		if err != nil {
