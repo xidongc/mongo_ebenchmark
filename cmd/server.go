@@ -47,7 +47,7 @@ func main() {
 	svr := grpc.NewServer(maxSendMsgSizeOpt, maxRecvMsgSizeOpt)
 	proxyConfig := &proxy.Config{
 		ServerIp:     config.ServerAddr,
-		Port:         config.ServerPort,
+		Port:         config.ProxyPort,
 		Insecure:     config.Insecure,
 		RpcTimeout:   config.RpcTimeout,
 		BatchSize:    config.BatchSize,

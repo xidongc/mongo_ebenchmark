@@ -57,6 +57,7 @@ type Client struct {
 	rpcClient mprpc.MongoProxyClient
 	cancelFunc context.CancelFunc
 	isHealthy bool
+	ProtoFile string
 }
 
 // Create a new client based on provided config
@@ -72,11 +73,19 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 		config.Port = 50051
 	}
 
+	val, ok := os.LookupEnv("PROTOSET_FILE")
+	if !ok {
+		log.Panic("not found env PROTOSET_FILE")
+		return
+	}
+
 	host := fmt.Sprintf("%s:%d", config.ServerIp, config.Port)
 	client = &Client{
 		config: config,
 		Host: host,
 	}
+	client.ProtoFile = val
+	log.Info(client.ProtoFile)
 	if client.Collection == nil {
 		client.Collection = &mprpc.Collection{
 			Database:   Database,
@@ -217,16 +226,23 @@ func (client *Client) Update(ctx context.Context, param *UpdateParam) (changeInf
 	return
 }
 
+// Remove with param
 func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInfo *mprpc.ChangeInfo, err error) {
 	b, err := bson.Marshal(param.Filter)
 	if err != nil {
 		log.Error(err)
 		return
 	}
+	var wOptions *mprpc.WriteOptions
+	if client.Turbo {
+		wOptions = getTurboWriteOptions()
+	} else {
+		wOptions = getSafeWriteOptions()
+	}
 	removeOps := &mprpc.RemoveOperation{
 		Collection: client.Collection,
 		Filter: b,
-		Writeoptions: getSafeWriteOptions(),
+		Writeoptions: wOptions,
 	}
 	if _, err = client.rpcClient.Remove(ctx, removeOps); err != nil {
 		log.Error(err)
@@ -234,7 +250,7 @@ func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInf
 	return
 }
 
-// Proxy Insert with param
+// Insert with param
 func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error) {
 
 	var rpcDocs []*mprpc.Document

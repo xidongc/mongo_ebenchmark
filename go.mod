@@ -6,6 +6,7 @@ require (
 	github.com/bojand/ghz v0.55.0
 	github.com/golang/protobuf v1.4.2
 	github.com/jessevdk/go-flags v1.4.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/sirupsen/logrus v1.2.0
 	github.com/xidongc-wish/mgo v0.0.0-20200417061821-13161a071d79
 	github.com/xidongc-wish/mongoproxy/mprpc v0.0.0-00010101000000-000000000000
