@@ -134,11 +134,28 @@ func (client *Client) Close() (err error) {
 	return
 }
 
+// Find prepares a query using the provided document
+//
+// See proxy.QueryParam for customizing query param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/Querying
+//     http://www.mongodb.org/display/DOCS/Advanced+Queries
+//
 func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []interface{}, err error) {
 	return
 }
 
-// FindIter with param
+// FindIter works like Find, but uses iterClient as stream function
+//
+// See proxy.QueryParam for customizing query param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/Querying
+//     http://www.mongodb.org/display/DOCS/Advanced+Queries
+//
 func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream mprpc.MongoProxy_FindIterClient, err error) {
 	filterBytes, err := bson.Marshal(query.Filter)
 	if err != nil {
@@ -200,10 +217,25 @@ func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream m
 	return
 }
 
+// Count returns the total number of documents in the collection.
+//
+// See proxy.QueryParam for customizing query param
 func (client *Client) Count(ctx context.Context, query *QueryParam) (count uint64, err error) {
 	return
 }
 
+// Explain returns a number of details about how the MongoDB server would
+// execute the requested query, such as the number of objects examined,
+// the number of times the read lock was yielded to allow writes to go in,
+// and so on.
+//
+// See proxy.QueryParam for customizing query param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/Optimization
+//     http://www.mongodb.org/display/DOCS/Query+Optimizer
+//
 func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFields bson.M, err error){
 	return
 }
@@ -212,6 +244,16 @@ func (client *Client) Aggregate(ctx context.Context, query *AggregateParam) (doc
 	return
 }
 
+// Update finds a single document matching the provided selector document
+// and modifies it according to the update document.
+//
+// See proxy.QueryParam for customizing query param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/Updating
+//     http://www.mongodb.org/display/DOCS/Atomic+Operations
+//
 func (client *Client) Update(ctx context.Context, param *UpdateParam) (changeInfo *mprpc.ChangeInfo, err error) {
 	var wOptions *mprpc.WriteOptions
 	if client.Turbo {
@@ -245,7 +287,15 @@ func (client *Client) Update(ctx context.Context, param *UpdateParam) (changeInf
 	return
 }
 
-// Remove with param
+// Remove finds documents matching the provided selector document
+// and removes it from the database.
+//
+// See proxy.RemoveParam for customizing remove param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/Removing
+//
 func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInfo *mprpc.ChangeInfo, err error) {
 	b, err := bson.Marshal(param.Filter)
 	if err != nil {
@@ -269,7 +319,14 @@ func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInf
 	return
 }
 
-// Insert with param
+// Insert inserts one or more documents in the respective collection.
+//
+// See proxy.InsertParam for customizing insert param
+//
+// Relevant documentation:
+//
+// http://www.mongodb.org/display/DOCS/Inserting
+//
 func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error) {
 
 	var rpcDocs []*mprpc.Document
@@ -333,6 +390,19 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 	return
 }
 
+// FindAndModify allows updating, upserting or removing a document matching
+// a query and atomically returning either the old version (the default) or
+// the new version of the document (when ReturnNew is true). If no objects
+// are found Apply returns ErrNotFound.
+//
+// See proxy.FindModifyParam for customizing findAndModify param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/findAndModify+Command
+//     http://www.mongodb.org/display/DOCS/Updating
+//     http://www.mongodb.org/display/DOCS/Atomic+Operations
+//
 func (client *Client) FindAndModify(ctx context.Context, param *FindModifyParam) (singleDoc interface{}, err error) {
 	filterBytes, err := bson.Marshal(param.Filter)
 	if err != nil {
@@ -368,10 +438,19 @@ func (client *Client) FindAndModify(ctx context.Context, param *FindModifyParam)
 	return
 }
 
+// Distinct unmarshals into result the list of distinct values for the given key.
+//
+// See proxy.QueryParam for customizing distinct param
+//
+// Relevant documentation:
+//
+//     http://www.mongodb.org/display/DOCS/Aggregation
+//
 func (client *Client) Distinct(ctx context.Context, query *QueryParam) (distinctKeys []interface{}, err error) {
 	return
 }
 
+// HealthCheck checks database driver, and atomically update client
 func (client *Client) HealthCheck() (err error) {
 	log.Info("Start doing health check")
 	empty := Empty{}
