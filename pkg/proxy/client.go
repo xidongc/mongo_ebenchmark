@@ -11,6 +11,8 @@ import (
 	"github.com/xidongc-wish/mongoproxy/mprpc"
 	"google.golang.org/grpc"
 	"os"
+	"sync/atomic"
+	"time"
 )
 
 // Function List in Proxy
@@ -35,11 +37,6 @@ const (
 	Collection 	  = "default"
 )
 
-// TODO define as const, should be in env
-const (
-	ProtoFile     = "/Users/derekchen/go/src/github.com/xidongc/mongodb_ebenchmark/pkg/proxy/rpc.protoset"
-)
-
 // Mode for FindAndModify
 const (
 	FindAndDelete 	FindAndModifyMode = 0
@@ -47,7 +44,11 @@ const (
 	FindAndUpsert   FindAndModifyMode = 2
 )
 
-// Proxy Client
+// Client represents a middleware with the actual database driver
+//
+// Currently client will use ebenchmark database as defined in const
+// to avoid interfere with production workload. client support multi
+// api. See the documentation on const for more details.
 type Client struct {
 	config *Config
 	Host string
@@ -56,11 +57,17 @@ type Client struct {
 	activeCon *grpc.ClientConn
 	rpcClient mprpc.MongoProxyClient
 	cancelFunc context.CancelFunc
-	isHealthy bool
+	Healthy *int32
 	ProtoFile string
 }
 
-// Create a new client based on provided config
+// NewClient Creates a new proxy client based on provided config
+// This method is generally called just once for con establish,
+// does health check in the background task, and check for env:
+// PROTOSET_FILE, this env represent grpc interface with driver
+//
+// Once Client is not useful anymore, Close must be called to
+// release the resources appropriately
 func NewClient(config *Config, namespace string, cancel context.CancelFunc) (client *Client, err error) {
 	if config == nil {
 		config = DefaultConfig()
@@ -73,19 +80,20 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 		config.Port = 50051
 	}
 
-	val, ok := os.LookupEnv("PROTOSET_FILE")
-	if !ok {
-		log.Panic("not found env PROTOSET_FILE")
-		return
-	}
-
 	host := fmt.Sprintf("%s:%d", config.ServerIp, config.Port)
 	client = &Client{
 		config: config,
 		Host: host,
 	}
+
+	val, ok := os.LookupEnv("PROTOSET_FILE")
+	if !ok {
+		atomic.StoreInt32(client.Healthy, 0)
+		log.Panic("not found env PROTOSET_FILE")
+		return
+	}
 	client.ProtoFile = val
-	log.Info(client.ProtoFile)
+
 	if client.Collection == nil {
 		client.Collection = &mprpc.Collection{
 			Database:   Database,
@@ -102,10 +110,20 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 		log.Warning("handle context exit in application")
 	}
 	client.cancelFunc = cancel
+
+	go func() {
+		for {
+			_ = client.HealthCheck()
+			time.Sleep(time.Second * 5)
+		}
+	}()
 	return
 }
 
-// Close a proxy client
+// Close will release the resources in a proxy client, and call
+// cancelFunc if specified
+//
+// Call Close after NewClient, See NewClient for more details
 func (client *Client) Close() (err error) {
 	if err := client.activeCon.Close(); err != nil {
 		log.Fatalf("clean up failed: %s", err)
@@ -120,6 +138,7 @@ func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []inter
 	return
 }
 
+// FindIter with param
 func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream mprpc.MongoProxy_FindIterClient, err error) {
 	filterBytes, err := bson.Marshal(query.Filter)
 	if err != nil {
@@ -162,7 +181,7 @@ func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream m
 	report, err := runner.Run(
 		FindIter,
 		client.Host,
-		runner.WithProtoset(ProtoFile),
+		runner.WithProtoset(client.ProtoFile),
 		runner.WithConcurrency(query.Amp.Concurrency),
 		runner.WithConnections(query.Amp.Connections),
 		runner.WithCPUs(query.Amp.CPUs),
@@ -279,7 +298,7 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 		report, err := runner.Run(
 			Insert,
 			client.Host,
-			runner.WithProtoset(ProtoFile),
+			runner.WithProtoset(client.ProtoFile),
 			runner.WithConcurrency(param.Amp.Concurrency),
 			runner.WithConnections(param.Amp.Connections),
 			runner.WithCPUs(param.Amp.CPUs),
@@ -359,12 +378,15 @@ func (client *Client) HealthCheck() (err error) {
 	_, err = runner.Run(
 		Healthcheck,
 		client.Host,
-		runner.WithProtoset(ProtoFile),
+		runner.WithProtoset(client.ProtoFile),
 		runner.WithData(empty),
 		runner.WithInsecure(client.config.Insecure),
 	)
 	if err != nil {
+		atomic.StoreInt32(client.Healthy, 0)
 		log.Fatal(err.Error())
+	} else {
+		atomic.StoreInt32(client.Healthy, 1)
 	}
 	return
 }
