@@ -83,7 +83,6 @@ func main() {
 		}
 	}()
 
-
 	amplifyOptions := &proxy.AmplifyOptions{
 		Connections:  config.Connections,
 		Concurrency:  config.Concurrency,
@@ -94,26 +93,26 @@ func main() {
 	}
 
 	skuService := &sku.Service{
-		Storage: storageClient,
+		Storage:   storageClient,
 		Amplifier: amplifyOptions,
 	}
 	paymentService := &payment.Service{
-		Storage: storageClient,
+		Storage:   storageClient,
 		Amplifier: amplifyOptions,
 	}
 
 	orderService := &order.Service{
-		Storage: storageClient,
+		Storage:   storageClient,
 		Amplifier: amplifyOptions,
 	}
 
-	userService := &user.Service {
-		Storage: storageClient,
+	userService := &user.Service{
+		Storage:   storageClient,
 		Amplifier: amplifyOptions,
 	}
 
-	productService := &product.Service {
-		Storage: storageClient,
+	productService := &product.Service{
+		Storage:   storageClient,
 		Amplifier: amplifyOptions,
 	}
 

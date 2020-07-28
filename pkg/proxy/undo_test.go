@@ -24,17 +24,17 @@ import (
 // Test undo insert
 func TestUndoInsert(t *testing.T) {
 	item1 := orderpb.Item{
-		ProductId: "pid12345",
-		Name: "TestItem",
-		Quantity: 4,
-		Amount: 5,
+		ProductId:   "pid12345",
+		Name:        "TestItem",
+		Quantity:    4,
+		Amount:      5,
 		Description: "test description",
 	}
 	item2 := orderpb.Item{
-		ProductId: "pid12345",
-		Name: "TestItem",
-		Quantity: 4,
-		Amount: 5,
+		ProductId:   "pid12345",
+		Name:        "TestItem",
+		Quantity:    4,
+		Amount:      5,
 		Description: "test description",
 	}
 	items := make([]interface{}, 2)
@@ -42,7 +42,7 @@ func TestUndoInsert(t *testing.T) {
 	items[1] = item2
 	insertParam := InsertParam{
 		Docs: items,
-		Amp: MicroAmplifier(),
+		Amp:  MicroAmplifier(),
 	}
 	removeParam := UndoInsert(&insertParam)
 	if len(removeParam) != 2 {

@@ -25,7 +25,7 @@ import (
 const ns = "product"
 
 type Service struct {
-	Storage proxy.Client
+	Storage   proxy.Client
 	Amplifier proxy.Amplifier
 }
 
@@ -44,5 +44,3 @@ func (s Service) Update(context.Context, *productpb.UpdateRequest) (*productpb.P
 func (s Service) Delete(context.Context, *productpb.DeleteRequest) (*productpb.Empty, error) {
 	panic("implement me")
 }
-
-

@@ -23,7 +23,10 @@ import (
 	"strings"
 )
 
-// Undo insert param
+// UndoInsert generate removeParam based on given insert param
+// Currently nested struct is not supported
+//
+// Please refer proxy.InsertParam, proxy.RemoveParam for more details
 func UndoInsert(param *InsertParam) (params []*RemoveParam) {
 	if param == nil {
 		log.Error("received nil input")
@@ -47,7 +50,7 @@ func UndoInsert(param *InsertParam) (params []*RemoveParam) {
 
 		params = append(params, &RemoveParam{
 			Filter: removeFilter,
-			Amp: param.Amp,
+			Amp:    param.Amp,
 		})
 	}
 	return

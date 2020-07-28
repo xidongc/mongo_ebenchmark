@@ -49,15 +49,15 @@ const (
 
 // Database used for ebenchmark
 const (
-	Database 	  = "ebenchmark"
-	Collection 	  = "default"
+	Database   = "ebenchmark"
+	Collection = "default"
 )
 
 // Mode for FindAndModify
 const (
-	FindAndDelete 	FindAndModifyMode = 0
-	FindAndUpdate   FindAndModifyMode = 1
-	FindAndUpsert   FindAndModifyMode = 2
+	FindAndDelete FindAndModifyMode = 0
+	FindAndUpdate FindAndModifyMode = 1
+	FindAndUpsert FindAndModifyMode = 2
 )
 
 // Client represents a middleware with the actual database driver
@@ -66,15 +66,15 @@ const (
 // to avoid interfere with production workload. client support multi
 // api. See the documentation on const for more details.
 type Client struct {
-	config *Config
-	Host string
+	config     *Config
+	Host       string
 	Collection *mprpc.Collection
-	Turbo bool
-	activeCon *grpc.ClientConn
-	rpcClient mprpc.MongoProxyClient
+	Turbo      bool
+	activeCon  *grpc.ClientConn
+	rpcClient  mprpc.MongoProxyClient
 	cancelFunc context.CancelFunc
-	Healthy *int32
-	ProtoFile string
+	Healthy    *int32
+	ProtoFile  string
 }
 
 // NewClient Creates a new proxy client based on provided config
@@ -99,7 +99,7 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 	host := fmt.Sprintf("%s:%d", config.ServerIp, config.Port)
 	client = &Client{
 		config: config,
-		Host: host,
+		Host:   host,
 	}
 
 	val, ok := os.LookupEnv("PROTOSET_FILE")
@@ -196,8 +196,8 @@ func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream m
 		Filter:      filterBytes,
 		Skip:        0,
 		Maxtimems:   -1,
-		Maxscan: 	 0,
-		Prefetch:	 prefetch,
+		Maxscan:     0,
+		Prefetch:    prefetch,
 		Batchsize:   client.config.BatchSize,
 		Readpref:    int32(readPref),
 		Findone:     false,
@@ -220,7 +220,7 @@ func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream m
 		runner.WithCPUs(query.Amp.CPUs),
 		runner.WithData(request),
 		runner.WithInsecure(client.config.Insecure),
-		)
+	)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -252,7 +252,7 @@ func (client *Client) Count(ctx context.Context, query *QueryParam) (count uint6
 //     http://www.mongodb.org/display/DOCS/Optimization
 //     http://www.mongodb.org/display/DOCS/Query+Optimizer
 //
-func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFields bson.M, err error){
+func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFields bson.M, err error) {
 	return
 }
 
@@ -269,7 +269,7 @@ func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFi
 //     http://docs.mongodb.org/manual/applications/aggregation
 //     http://docs.mongodb.org/manual/tutorial/aggregation-examples
 //
-func (client *Client) Aggregate(ctx context.Context, query *AggregateParam) (documents []interface{}, err error){
+func (client *Client) Aggregate(ctx context.Context, query *AggregateParam) (documents []interface{}, err error) {
 	return
 }
 
@@ -338,8 +338,8 @@ func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInf
 		wOptions = getSafeWriteOptions()
 	}
 	removeOps := &mprpc.RemoveOperation{
-		Collection: client.Collection,
-		Filter: b,
+		Collection:   client.Collection,
+		Filter:       b,
 		Writeoptions: wOptions,
 	}
 	if _, err = client.rpcClient.Remove(ctx, removeOps); err != nil {
@@ -376,7 +376,7 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 	}
 	request := mprpc.InsertOperation{
 		Collection:   client.Collection,
-		Documents:  rpcDocs,
+		Documents:    rpcDocs,
 		Writeoptions: wOptions,
 	}
 

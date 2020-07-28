@@ -27,7 +27,7 @@ import (
 const ns = "sku"
 
 type Service struct {
-	Storage proxy.Client
+	Storage   proxy.Client
 	Amplifier proxy.Amplifier
 }
 
@@ -43,18 +43,18 @@ func (s *Service) Delete(context.Context, *skupb.DeleteRequest) (*skupb.Empty, e
 	panic("implement me")
 }
 
-func (s *Service) New(ctx context.Context, req *skupb.NewRequest) (sku *skupb.Sku, err error){
+func (s *Service) New(ctx context.Context, req *skupb.NewRequest) (sku *skupb.Sku, err error) {
 
 	updateQuery := bson.M{
-		"name":			     req.GetName(),
+		"name":              req.GetName(),
 		"price":             req.GetPrice(),
 		"currency":          req.GetCurrency(),
 		"active":            req.GetActive(),
-		"productid":		 req.GetParent(),
+		"productid":         req.GetParent(),
 		"image":             req.GetImage(),
 		"metadata":          req.GetMetadata(),
 		"packagedimensions": req.GetPackageDimensions(),
-		"attibutes": 	     req.GetAttributes(),
+		"attibutes":         req.GetAttributes(),
 	}
 
 	param := &proxy.UpdateParam{
@@ -72,21 +72,20 @@ func (s *Service) New(ctx context.Context, req *skupb.NewRequest) (sku *skupb.Sk
 
 	log.Info(changeInfo)
 
-
 	if err != nil {
 		log.Errorf("sku error: storage failed with %s", err)
 	}
 
 	sku = &skupb.Sku{
-		Name:			     req.GetName(),
-		Price:               req.GetPrice(),
-		Currency:            req.GetCurrency(),
-		Active:              req.GetActive(),
-		ProductId:		     req.GetParent(),
-		Image:               req.GetImage(),
-		Metadata:            req.GetMetadata(),
-		PackageDimensions:   req.GetPackageDimensions(),
-		Attributes: 	     req.GetAttributes(),
+		Name:              req.GetName(),
+		Price:             req.GetPrice(),
+		Currency:          req.GetCurrency(),
+		Active:            req.GetActive(),
+		ProductId:         req.GetParent(),
+		Image:             req.GetImage(),
+		Metadata:          req.GetMetadata(),
+		PackageDimensions: req.GetPackageDimensions(),
+		Attributes:        req.GetAttributes(),
 	}
 
 	return

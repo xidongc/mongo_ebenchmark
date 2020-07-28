@@ -25,7 +25,7 @@ import (
 const ns = "payment"
 
 type Service struct {
-	Storage proxy.Client
+	Storage   proxy.Client
 	Amplifier proxy.Amplifier
 }
 
@@ -40,5 +40,3 @@ func (s Service) RefundCharge(context.Context, *paymentpb.RefundRequest) (*payme
 func (s Service) Get(context.Context, *paymentpb.GetRequest) (*paymentpb.Charge, error) {
 	panic("implement me")
 }
-
-

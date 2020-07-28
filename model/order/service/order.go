@@ -25,7 +25,7 @@ import (
 const ns = "order"
 
 type Service struct {
-	Storage proxy.Client
+	Storage   proxy.Client
 	Amplifier proxy.Amplifier
 }
 
@@ -44,5 +44,3 @@ func (s Service) Pay(context.Context, *orderpb.PayRequest) (*orderpb.Order, erro
 func (s Service) Return(context.Context, *orderpb.ReturnRequest) (*orderpb.Order, error) {
 	panic("implement me")
 }
-
-

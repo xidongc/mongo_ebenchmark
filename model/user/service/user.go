@@ -25,7 +25,7 @@ import (
 const ns = "user"
 
 type Service struct {
-	Storage proxy.Client
+	Storage   proxy.Client
 	Amplifier proxy.Amplifier
 }
 
@@ -44,4 +44,3 @@ func (s Service) Update(context.Context, *userpb.UpdateRequest) (*userpb.User, e
 func (s Service) Delete(context.Context, *userpb.DeleteRequest) (*userpb.Empty, error) {
 	panic("implement me")
 }
-

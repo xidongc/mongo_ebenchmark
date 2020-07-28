@@ -42,10 +42,10 @@ func TestClientOps(t *testing.T) {
 
 	t.Run(Insert, func(t *testing.T) {
 		sku := skupb.Inventory{
-			SkuId: 123,
+			SkuId:       123,
 			WarehouseId: 345,
-			Quantity: 234,
-			Type: 123,
+			Quantity:    234,
+			Type:        123,
 		}
 		skus := make([]interface{}, 1)
 		skus[0] = sku
@@ -60,8 +60,8 @@ func TestClientOps(t *testing.T) {
 
 	t.Run(FindIter, func(t *testing.T) {
 		queryParam := &QueryParam{
-			Filter:      bson.M{},
-			Amp:         MicroAmplifier(),
+			Filter: bson.M{},
+			Amp:    MicroAmplifier(),
 		}
 
 		var documents []interface{}
@@ -101,10 +101,10 @@ func TestClientOps(t *testing.T) {
 
 	t.Run(Update, func(t *testing.T) {
 		updateParam := &UpdateParam{
-			Filter:      bson.M{"skuid": 123},
-			Update:      bson.M{"skuid": 124},
-			Multi: 		 false,
-			Amp:         MicroAmplifier(),
+			Filter: bson.M{"skuid": 123},
+			Update: bson.M{"skuid": 124},
+			Multi:  false,
+			Amp:    MicroAmplifier(),
 		}
 		changeInfo, err := client.Update(ctx, updateParam)
 		if err != nil {
