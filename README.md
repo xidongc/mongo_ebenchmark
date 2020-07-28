@@ -1,5 +1,5 @@
 <p align="left">
-  <a href="https://goreportcard.com/report/github.com/xidongc/mongodb_ebenchmark"><img src="https://goreportcard.com/badge/github.com/xidongc/mongodb_ebenchmark"></a>
+  <a href="https://goreportcard.com/report/github.com/xidongc/mongo_ebenchmark"><img src="https://goreportcard.com/badge/github.com/xidongc/mongo_ebenchmark"></a>
 </p>
 
 # Mongodb eBenchmark
