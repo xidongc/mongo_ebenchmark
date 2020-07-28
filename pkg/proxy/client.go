@@ -256,6 +256,19 @@ func (client *Client) Explain(ctx context.Context, query *QueryParam) (explainFi
 	return
 }
 
+// Aggregate processes data records and return computed results.
+// Aggregation operations group values from multiple documents together,
+// and can perform a variety of operations on the grouped data to return
+// a single result.
+//
+// See proxy.AggregateParam for customizing aggregate param
+//
+// Relevant documentation:
+//
+//     http://docs.mongodb.org/manual/reference/aggregation
+//     http://docs.mongodb.org/manual/applications/aggregation
+//     http://docs.mongodb.org/manual/tutorial/aggregation-examples
+//
 func (client *Client) Aggregate(ctx context.Context, query *AggregateParam) (documents []interface{}, err error){
 	return
 }
