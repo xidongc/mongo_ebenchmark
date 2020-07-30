@@ -160,6 +160,73 @@ func (client *Client) Close() (err error) {
 //     http://www.mongodb.org/display/DOCS/Advanced+Queries
 //
 func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []interface{}, err error) {
+	filterBytes, err := bson.Marshal(query.Filter)
+	if err != nil {
+		log.Errorf("%s: marshal filter error", FindIter)
+	}
+	var readConcern string
+	var prefetch float64
+	var readPref mgo.Mode
+
+	if client.Turbo {
+		readConcern = "local"
+		prefetch = 0.75
+		readPref = mgo.Nearest
+	} else {
+		readConcern = "linearizable"
+		prefetch = 0.25
+		readPref = mgo.Primary
+	}
+
+	request := mprpc.FindQuery{
+		Collection:  client.Collection,
+		Filter:      filterBytes,
+		Skip:        0,
+		Maxtimems:   -1,
+		Maxscan:     0,
+		Prefetch:    prefetch,
+		Batchsize:   client.config.BatchSize,
+		Readpref:    int32(readPref),
+		Findone:     false,
+		Partial:     client.config.AllowPartial,
+		Readconcern: readConcern,
+		Comment:     FindIter,
+		Rpctimeout:  client.config.RpcTimeout,
+	}
+
+	if query.Amp != nil {
+		report, err := runner.Run(
+			FindIter,
+			client.Host,
+			runner.WithProtoset(client.ProtoFile),
+			runner.WithConcurrency(query.Amp.Concurrency),
+			runner.WithConnections(query.Amp.Connections),
+			runner.WithCPUs(query.Amp.CPUs),
+			runner.WithData(request),
+			runner.WithInsecure(client.config.Insecure),
+		)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		p := printer.ReportPrinter{
+			Out:    os.Stdout,
+			Report: report,
+		}
+
+		_ = p.Print("pretty")
+	}
+
+	resultSet, err := client.rpcClient.Find(ctx, &request)
+	if err != nil {
+		log.Error(err)
+	}
+	for _, r := range resultSet.Results {
+		var doc interface{}
+		if err = bson.Unmarshal(r.Val, &doc); err != nil {
+			log.Error(err)
+		}
+		docs = append(docs, doc)
+	}
 	return
 }
 
