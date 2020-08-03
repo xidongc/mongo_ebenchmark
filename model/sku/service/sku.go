@@ -18,6 +18,8 @@ package sku
 
 import (
 	"context"
+	"errors"
+	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongodb_ebenchmark/model/sku/skupb"
@@ -31,16 +33,61 @@ type Service struct {
 	Amplifier proxy.Amplifier
 }
 
-func (s *Service) Get(context.Context, *skupb.GetRequest) (*skupb.Sku, error) {
-	panic("implement me")
+func (s *Service) Get(ctx context.Context, req *skupb.GetRequest) (sku *skupb.Sku, err error) {
+	param := &proxy.QueryParam{
+		Filter:      bson.M{"_id": req.Id},
+		FindOne:     true,
+		Amp:         s.Amplifier,
+	}
+
+	results, err := s.Storage.Find(ctx, param)
+
+	if err != nil || len(results) > 1 {
+		log.Error(err)
+		return
+	} else if len(results) == 0 {
+		return sku, errors.New("no result found")
+	}
+
+	err = mapstructure.Decode(results[0], sku)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return sku, nil
 }
 
-func (s *Service) Update(context.Context, *skupb.UpdateRequest) (*skupb.Sku, error) {
-	panic("implement me")
+func (s *Service) Update(ctx context.Context, req *skupb.UpdateRequest) (sku *skupb.Sku, err error) {
+	var updateParams bson.M
+	if err = mapstructure.Decode(req, &updateParams); err != nil {
+		log.Error(err)
+		return
+	}
+	updateQuery := &proxy.UpdateParam{
+		Filter: bson.M{"_id": req.Id},
+		Update: updateParams,
+		Upsert: false,
+		Multi:  true,
+		Amp:    s.Amplifier,
+	}
+	_, err = s.Storage.Update(ctx, updateQuery)
+	if err != nil {
+		return
+	}
+	// TODO not return product
+	return
 }
 
-func (s *Service) Delete(context.Context, *skupb.DeleteRequest) (*skupb.Empty, error) {
-	panic("implement me")
+func (s *Service) Delete(ctx context.Context, req *skupb.DeleteRequest) (*skupb.Empty, error) {
+	removeQuery := &proxy.RemoveParam{
+		Filter: bson.M{"_id": req.Id},
+		Amp:    s.Amplifier,
+	}
+	_, err := s.Storage.Remove(ctx, removeQuery)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &skupb.Empty{}, nil
 }
 
 func (s *Service) New(ctx context.Context, req *skupb.NewRequest) (sku *skupb.Sku, err error) {

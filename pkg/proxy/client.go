@@ -73,7 +73,7 @@ type Client struct {
 	activeCon  *grpc.ClientConn
 	rpcClient  mprpc.MongoProxyClient
 	cancelFunc context.CancelFunc
-	Healthy    *int32
+	Healthy    int32
 	ProtoFile  string
 }
 
@@ -104,7 +104,7 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 
 	val, ok := os.LookupEnv("PROTOSET_FILE")
 	if !ok {
-		atomic.StoreInt32(client.Healthy, 0)
+		atomic.StoreInt32(&client.Healthy, 0)
 		log.Panic("not found env PROTOSET_FILE")
 		return
 	}
@@ -130,7 +130,10 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 	go func() {
 		for {
 			_ = client.HealthCheck()
-			time.Sleep(time.Second * 5)
+			if atomic.LoadInt32(&client.Healthy) != 1 {
+				panic("server not healthy error")
+			}
+			time.Sleep(time.Second * 300)
 		}
 	}()
 	return
@@ -162,7 +165,7 @@ func (client *Client) Close() (err error) {
 func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []interface{}, err error) {
 	filterBytes, err := bson.Marshal(query.Filter)
 	if err != nil {
-		log.Errorf("%s: marshal filter error", FindIter)
+		log.Errorf("%s: marshal filter error", Find)
 	}
 	var readConcern string
 	var prefetch float64
@@ -558,10 +561,10 @@ func (client *Client) HealthCheck() (err error) {
 		runner.WithInsecure(client.config.Insecure),
 	)
 	if err != nil {
-		atomic.StoreInt32(client.Healthy, 0)
+		atomic.StoreInt32(&client.Healthy, 0)
 		log.Fatal(err.Error())
 	} else {
-		atomic.StoreInt32(client.Healthy, 1)
+		atomic.StoreInt32(&client.Healthy, 1)
 	}
 	return
 }

@@ -18,7 +18,13 @@ package service
 
 import (
 	"context"
+	"errors"
+	"github.com/mitchellh/mapstructure"
+	log "github.com/sirupsen/logrus"
+	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongodb_ebenchmark/model/order/orderpb"
+	"github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
+	payment "github.com/xidongc/mongodb_ebenchmark/model/payment/service"
 	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
 )
 
@@ -26,21 +32,73 @@ const ns = "order"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier proxy.Amplifier
+	Payment	  payment.Service
+	Amplifier  proxy.Amplifier
 }
 
-func (s Service) New(context.Context, *orderpb.NewRequest) (*orderpb.Order, error) {
-	panic("implement me")
+// Create Order
+func (s Service) New(ctx context.Context, req *orderpb.NewRequest) (*orderpb.Order, error) {
+	order := orderpb.Order{
+		Currency: req.Currency,
+		Items: req.Items,
+		Metadata: req.Metadata,
+		Shipping: req.Shipping,
+	}
+	var orders []interface{}
+	orders = append(orders, order)
+	insertQuery := &proxy.InsertParam{
+		Docs: orders,
+		Amp: s.Amplifier,
+	}
+	err := s.Storage.Insert(ctx, insertQuery)
+	if err != nil {
+		log.Error(err)
+	}
+	return &order, nil
 }
 
-func (s Service) Get(context.Context, *orderpb.GetRequest) (*orderpb.Order, error) {
-	panic("implement me")
+// Get Order by id
+func (s Service) Get(ctx context.Context, req *orderpb.GetRequest) (order *orderpb.Order, err error) {
+
+	param := &proxy.QueryParam{
+		Filter:      bson.M{"_id": req.Id},
+		FindOne:     true,
+		Amp:         s.Amplifier,
+	}
+
+	results, err := s.Storage.Find(ctx, param)
+
+	if err != nil || len(results) > 1 {
+		log.Error(err)
+		return
+	} else if len(results) == 0 {
+	return order, errors.New("no result found")
 }
 
-func (s Service) Pay(context.Context, *orderpb.PayRequest) (*orderpb.Order, error) {
-	panic("implement me")
+	err = mapstructure.Decode(results[0], order)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return order, nil
 }
 
-func (s Service) Return(context.Context, *orderpb.ReturnRequest) (*orderpb.Order, error) {
-	panic("implement me")
+// Pay
+func (s Service) Pay(ctx context.Context, req *orderpb.PayRequest) (order *orderpb.Order, err error) {
+	chargeRequest := &paymentpb.ChargeRequest {
+		PaymentProviderId: req.GetPaymentProviderId(),
+		Card: req.GetCard(),
+		// Amount:  uint64(o.GetAmount()),  TODO need to define order id
+	}
+	charge, err := s.Payment.NewCharge(ctx, chargeRequest)
+	if err != nil {
+		// TODO do refund logic
+		log.Fatal(err)
+	}
+	log.Info(charge)
+	return
+}
+
+func (s Service) Return(ctx context.Context, req *orderpb.ReturnRequest) (order *orderpb.Order, err error) {
+	// TODO
+	return
 }

@@ -18,6 +18,10 @@ package service
 
 import (
 	"context"
+	"errors"
+	"github.com/mitchellh/mapstructure"
+	log "github.com/sirupsen/logrus"
+	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
 	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
 )
@@ -29,14 +33,68 @@ type Service struct {
 	Amplifier proxy.Amplifier
 }
 
-func (s Service) NewCharge(context.Context, *paymentpb.ChargeRequest) (*paymentpb.Charge, error) {
-	panic("implement me")
+// New Charge
+func (s Service) NewCharge(ctx context.Context, req *paymentpb.ChargeRequest) (*paymentpb.Charge, error) {
+	charge := paymentpb.Charge{
+		Currency:   req.GetCurrency(),
+		ChargeAmount: req.GetAmount(),
+	}
+
+	var docs []interface{}
+	docs = append(docs, charge)
+
+	param := &proxy.InsertParam{
+		Docs: docs,
+		Amp:  s.Amplifier,
+	}
+
+	if err := s.Storage.Insert(ctx, param); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &charge, nil
 }
 
-func (s Service) RefundCharge(context.Context, *paymentpb.RefundRequest) (*paymentpb.Charge, error) {
-	panic("implement me")
+// Refund Charge
+func (s Service) RefundCharge(ctx context.Context, req *paymentpb.RefundRequest) (*paymentpb.Charge, error) {
+	charge := paymentpb.Charge{
+		ChargeAmount: -req.GetAmount(),
+	}
+
+	var docs []interface{}
+	docs = append(docs, charge)
+
+	param := &proxy.InsertParam{
+		Docs: docs,
+		Amp:  s.Amplifier,
+	}
+
+	if err := s.Storage.Insert(ctx, param); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &charge, nil
 }
 
-func (s Service) Get(context.Context, *paymentpb.GetRequest) (*paymentpb.Charge, error) {
-	panic("implement me")
+func (s Service) Get(ctx context.Context, req *paymentpb.GetRequest) (charge *paymentpb.Charge, err error) {
+	param := &proxy.QueryParam{
+		Filter:      bson.M{"_id": req.Id},
+		FindOne:     true,
+		Amp:         s.Amplifier,
+	}
+
+	results, err := s.Storage.Find(ctx, param)
+
+	if err != nil || len(results) > 1 {
+		log.Error(err)
+		return
+	} else if len(results) == 0 {
+		return charge, errors.New("no result found")
+	}
+
+	err = mapstructure.Decode(results[0], charge)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return charge, nil
 }

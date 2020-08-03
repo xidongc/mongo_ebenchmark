@@ -18,6 +18,10 @@ package service
 
 import (
 	"context"
+	"errors"
+	"github.com/mitchellh/mapstructure"
+	log "github.com/sirupsen/logrus"
+	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongodb_ebenchmark/model/product/productpb"
 	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
 )
@@ -26,21 +30,94 @@ const ns = "product"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier proxy.Amplifier
+	Amplifier  proxy.Amplifier
 }
 
-func (s Service) New(context.Context, *productpb.NewRequest) (*productpb.Product, error) {
-	panic("implement me")
+// Create a product
+func (s Service) New(ctx context.Context, req *productpb.NewRequest) (*productpb.Product, error) {
+	product := productpb.Product{
+		Name:        req.GetName(),
+		Description: req.GetDescription(),
+		Shippable:   req.GetShippable(),
+		Images:      req.GetImages(),
+		Attributes:  req.GetAttributes(),
+		Metadata:    req.GetMetadata(),
+		Active:      req.GetActive(),
+		Url:         req.GetUrl(),
+	}
+
+	var docs []interface{}
+	docs = append(docs, product)
+
+	param := &proxy.InsertParam{
+		Docs: docs,
+		Amp:  s.Amplifier,
+	}
+
+	if err := s.Storage.Insert(ctx, param); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &product, nil
 }
 
-func (s Service) Get(context.Context, *productpb.GetRequest) (*productpb.Product, error) {
-	panic("implement me")
+// get a product
+func (s Service) Get(ctx context.Context, req *productpb.GetRequest) (product *productpb.Product, err error) {
+
+	param := &proxy.QueryParam{
+		Filter:      bson.M{"_id": req.Id},
+		FindOne:     true,
+		Amp:         s.Amplifier,
+	}
+
+	results, err := s.Storage.Find(ctx, param)
+
+	if err != nil || len(results) > 1 {
+		log.Error(err)
+		return
+	} else if len(results) == 0 {
+		return product, errors.New("no result found")
+	}
+
+	err = mapstructure.Decode(results[0], product)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return product, nil
 }
 
-func (s Service) Update(context.Context, *productpb.UpdateRequest) (*productpb.Product, error) {
-	panic("implement me")
+// update a product
+func (s Service) Update(ctx context.Context, req *productpb.UpdateRequest) (product *productpb.Product, err error) {
+	var updateParams bson.M
+	if err = mapstructure.Decode(req, &updateParams); err != nil {
+		log.Error(err)
+		return
+	}
+	updateQuery := &proxy.UpdateParam{
+		 Filter: bson.M{"_id": req.Id},
+		 Update: updateParams,
+		 Upsert: false,
+		 Multi:  true,
+		 Amp:    s.Amplifier,
+	 }
+	 _, err = s.Storage.Update(ctx, updateQuery)
+	 if err != nil {
+	 	return
+	 }
+	 // TODO not return product
+	 return
 }
 
-func (s Service) Delete(context.Context, *productpb.DeleteRequest) (*productpb.Empty, error) {
-	panic("implement me")
+// Delete a product
+func (s Service) Delete(ctx context.Context, req *productpb.DeleteRequest) (*productpb.Empty, error) {
+	removeQuery := &proxy.RemoveParam{
+		Filter: bson.M{"_id": req.Id},
+		Amp:    s.Amplifier,
+	}
+	_, err := s.Storage.Remove(ctx, removeQuery)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	return &productpb.Empty{}, nil
 }
