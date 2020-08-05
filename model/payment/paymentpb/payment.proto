@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package paymentpb;
 
-option go_package = "github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb";
+option go_package = "github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb";
 
 import "google/api/annotations.proto";
 
 service PaymentService {
-    rpc NewCharge(ChargeRequest) returns (Charge) {
+    rpc NewCharge (ChargeRequest) returns (Charge) {
         option (google.api.http) = {
         post: "/charge"
         body: "*"

@@ -1,6 +1,5 @@
 /*
  * mongodb_ebenchmark - Mongodb grpc proxy benchmark for e-commerce workload (still in dev)
- *
  * Copyright (c) 2020 - Chen, Xidong <chenxidong2009@hotmail.com>
  *
  * All rights reserved.
@@ -12,6 +11,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 package service
@@ -22,15 +22,15 @@ import (
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
-	"github.com/xidongc/mongodb_ebenchmark/model/product/productpb"
-	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
+	"github.com/xidongc/mongo_ebenchmark/model/product/productpb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
 const ns = "product"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier  proxy.Amplifier
+	Amplifier proxy.Amplifier
 }
 
 // Create a product
@@ -65,9 +65,9 @@ func (s Service) New(ctx context.Context, req *productpb.NewRequest) (*productpb
 func (s Service) Get(ctx context.Context, req *productpb.GetRequest) (product *productpb.Product, err error) {
 
 	param := &proxy.QueryParam{
-		Filter:      bson.M{"_id": req.Id},
-		FindOne:     true,
-		Amp:         s.Amplifier,
+		Filter:  bson.M{"_id": req.Id},
+		FindOne: true,
+		Amp:     s.Amplifier,
 	}
 
 	results, err := s.Storage.Find(ctx, param)
@@ -94,18 +94,18 @@ func (s Service) Update(ctx context.Context, req *productpb.UpdateRequest) (prod
 		return
 	}
 	updateQuery := &proxy.UpdateParam{
-		 Filter: bson.M{"_id": req.Id},
-		 Update: updateParams,
-		 Upsert: false,
-		 Multi:  true,
-		 Amp:    s.Amplifier,
-	 }
-	 _, err = s.Storage.Update(ctx, updateQuery)
-	 if err != nil {
-	 	return
-	 }
-	 // TODO not return product
-	 return
+		Filter: bson.M{"_id": req.Id},
+		Update: updateParams,
+		Upsert: false,
+		Multi:  true,
+		Amp:    s.Amplifier,
+	}
+	_, err = s.Storage.Update(ctx, updateQuery)
+	if err != nil {
+		return
+	}
+	// TODO not return product
+	return
 }
 
 // Delete a product

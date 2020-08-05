@@ -1,6 +1,5 @@
 /*
  * mongodb_ebenchmark - Mongodb grpc proxy benchmark for e-commerce workload (still in dev)
- *
  * Copyright (c) 2020 - Chen, Xidong <chenxidong2009@hotmail.com>
  *
  * All rights reserved.
@@ -12,6 +11,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 package service
@@ -22,8 +22,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
-	"github.com/xidongc/mongodb_ebenchmark/model/user/userpb"
-	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
+	"github.com/xidongc/mongo_ebenchmark/model/user/userpb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
 const ns = "user"
@@ -36,9 +36,9 @@ type Service struct {
 // Create User
 func (s Service) New(ctx context.Context, req *userpb.NewRequest) (*userpb.User, error) {
 	user := userpb.User{
-		Name:        req.GetName(),
-		Metadata:    req.GetMetadata(),
-		Active:      req.GetActive(),
+		Name:     req.GetName(),
+		Metadata: req.GetMetadata(),
+		Active:   req.GetActive(),
 	}
 
 	var docs []interface{}
@@ -58,9 +58,9 @@ func (s Service) New(ctx context.Context, req *userpb.NewRequest) (*userpb.User,
 
 func (s Service) Get(ctx context.Context, req *userpb.GetRequest) (user *userpb.User, err error) {
 	param := &proxy.QueryParam{
-		Filter:      bson.M{"_id": req.Id},
-		FindOne:     true,
-		Amp:         s.Amplifier,
+		Filter:  bson.M{"_id": req.Id},
+		FindOne: true,
+		Amp:     s.Amplifier,
 	}
 
 	results, err := s.Storage.Find(ctx, param)

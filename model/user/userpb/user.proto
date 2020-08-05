@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package userpb;
 
-option go_package = "github.com/xidongc/mongodb_ebenchmark/model/user/userpb";
+option go_package = "github.com/xidongc/mongo_ebenchmark/model/user/userpb";
 
 import "payment/paymentpb/payment.proto";
 import "google/api/annotations.proto";
@@ -38,8 +38,8 @@ message NewRequest {
     string name = 1;
     string nickname = 2;
     string email = 3;
-    bool   active = 4;
-    int64  balance = 5;
+    bool active = 4;
+    int64 balance = 5;
     paymentpb.Currency currency = 6;
     string image = 7;
     string pwd = 8;
@@ -59,8 +59,8 @@ message UpdateRequest {
     string name = 2;
     string nickname = 3;
     string email = 4;
-    bool   active = 5;
-    int64  balance = 6;
+    bool active = 5;
+    int64 balance = 6;
     paymentpb.Currency currency = 7;
     string image = 8;
     string pwd = 9;
@@ -77,12 +77,12 @@ message User {
     string name = 2;
     string nickname = 3;
     string email = 4;
-    bool   active = 5;
-    int64  balance = 6;
+    bool active = 5;
+    int64 balance = 6;
     paymentpb.Currency currency = 7;
     string image = 8;
     string pwd = 9;
     map<string, string> metadata = 10;
-    int64  created = 998;
-    int64  updated = 999;
+    int64 created = 998;
+    int64 updated = 999;
 }

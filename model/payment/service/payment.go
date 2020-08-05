@@ -1,6 +1,5 @@
 /*
  * mongodb_ebenchmark - Mongodb grpc proxy benchmark for e-commerce workload (still in dev)
- *
  * Copyright (c) 2020 - Chen, Xidong <chenxidong2009@hotmail.com>
  *
  * All rights reserved.
@@ -12,6 +11,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 package service
@@ -22,8 +22,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
-	"github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
-	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
+	"github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
 const ns = "payment"
@@ -36,7 +36,7 @@ type Service struct {
 // New Charge
 func (s Service) NewCharge(ctx context.Context, req *paymentpb.ChargeRequest) (*paymentpb.Charge, error) {
 	charge := paymentpb.Charge{
-		Currency:   req.GetCurrency(),
+		Currency:     req.GetCurrency(),
 		ChargeAmount: req.GetAmount(),
 	}
 
@@ -78,9 +78,9 @@ func (s Service) RefundCharge(ctx context.Context, req *paymentpb.RefundRequest)
 
 func (s Service) Get(ctx context.Context, req *paymentpb.GetRequest) (charge *paymentpb.Charge, err error) {
 	param := &proxy.QueryParam{
-		Filter:      bson.M{"_id": req.Id},
-		FindOne:     true,
-		Amp:         s.Amplifier,
+		Filter:  bson.M{"_id": req.Id},
+		FindOne: true,
+		Amp:     s.Amplifier,
 	}
 
 	results, err := s.Storage.Find(ctx, param)

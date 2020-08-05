@@ -14,4 +14,4 @@
  *
  */
 
-package metrics
+package sku

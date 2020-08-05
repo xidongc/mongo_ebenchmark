@@ -1,4 +1,4 @@
-module github.com/xidongc/mongodb_ebenchmark
+module github.com/xidongc/mongo_ebenchmark
 
 go 1.14
 

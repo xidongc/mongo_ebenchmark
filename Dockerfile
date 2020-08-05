@@ -1,7 +1,7 @@
 FROM golang:1.14-alpine3.11 as builder
-COPY . /go/src/github.com/xidongc/mongodb_ebenchmark
-WORKDIR /go/src/github.com/xidongc/mongodb_ebenchmark
-RUN go build -o /ebenchmark github.com/xidongc/mongodb_ebenchmark/cmd
+COPY . /go/src/github.com/xidongc/mongo_ebenchmark
+WORKDIR /go/src/github.com/xidongc/mongo_ebenchmark
+RUN go build -o /ebenchmark github.com/xidongc/mongo_ebenchmark/cmd
 
 FROM alpine:3.11
 ENV GOTRACEBACK=single

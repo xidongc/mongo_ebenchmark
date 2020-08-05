@@ -1,6 +1,5 @@
 /*
  * mongodb_ebenchmark - Mongodb grpc proxy benchmark for e-commerce workload (still in dev)
- *
  * Copyright (c) 2020 - Chen, Xidong <chenxidong2009@hotmail.com>
  *
  * All rights reserved.
@@ -12,6 +11,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 package service
@@ -22,25 +22,25 @@ import (
 	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
-	"github.com/xidongc/mongodb_ebenchmark/model/order/orderpb"
-	"github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
-	payment "github.com/xidongc/mongodb_ebenchmark/model/payment/service"
-	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
+	"github.com/xidongc/mongo_ebenchmark/model/order/orderpb"
+	"github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb"
+	payment "github.com/xidongc/mongo_ebenchmark/model/payment/service"
+	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
 const ns = "order"
 
 type Service struct {
 	Storage   proxy.Client
-	Payment	  payment.Service
-	Amplifier  proxy.Amplifier
+	Payment   payment.Service
+	Amplifier proxy.Amplifier
 }
 
 // Create Order
 func (s Service) New(ctx context.Context, req *orderpb.NewRequest) (*orderpb.Order, error) {
 	order := orderpb.Order{
 		Currency: req.Currency,
-		Items: req.Items,
+		Items:    req.Items,
 		Metadata: req.Metadata,
 		Shipping: req.Shipping,
 	}
@@ -48,7 +48,7 @@ func (s Service) New(ctx context.Context, req *orderpb.NewRequest) (*orderpb.Ord
 	orders = append(orders, order)
 	insertQuery := &proxy.InsertParam{
 		Docs: orders,
-		Amp: s.Amplifier,
+		Amp:  s.Amplifier,
 	}
 	err := s.Storage.Insert(ctx, insertQuery)
 	if err != nil {
@@ -61,9 +61,9 @@ func (s Service) New(ctx context.Context, req *orderpb.NewRequest) (*orderpb.Ord
 func (s Service) Get(ctx context.Context, req *orderpb.GetRequest) (order *orderpb.Order, err error) {
 
 	param := &proxy.QueryParam{
-		Filter:      bson.M{"_id": req.Id},
-		FindOne:     true,
-		Amp:         s.Amplifier,
+		Filter:  bson.M{"_id": req.Id},
+		FindOne: true,
+		Amp:     s.Amplifier,
 	}
 
 	results, err := s.Storage.Find(ctx, param)
@@ -72,8 +72,8 @@ func (s Service) Get(ctx context.Context, req *orderpb.GetRequest) (order *order
 		log.Error(err)
 		return
 	} else if len(results) == 0 {
-	return order, errors.New("no result found")
-}
+		return order, errors.New("no result found")
+	}
 
 	err = mapstructure.Decode(results[0], order)
 	if err != nil {
@@ -84,9 +84,9 @@ func (s Service) Get(ctx context.Context, req *orderpb.GetRequest) (order *order
 
 // Pay
 func (s Service) Pay(ctx context.Context, req *orderpb.PayRequest) (order *orderpb.Order, err error) {
-	chargeRequest := &paymentpb.ChargeRequest {
+	chargeRequest := &paymentpb.ChargeRequest{
 		PaymentProviderId: req.GetPaymentProviderId(),
-		Card: req.GetCard(),
+		Card:              req.GetCard(),
 		// Amount:  uint64(o.GetAmount()),  TODO need to define order id
 	}
 	charge, err := s.Payment.NewCharge(ctx, chargeRequest)

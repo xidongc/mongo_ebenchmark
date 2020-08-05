@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package productpb;
 
-option go_package = "github.com/xidongc/mongodb_ebenchmark/model/product/productpb";
+option go_package = "github.com/xidongc/mongo_ebenchmark/model/product/productpb";
 
 import "sku/skupb/sku.proto";
 import "google/api/annotations.proto";
@@ -34,7 +34,8 @@ service ProductService {
     }
 }
 
-message Empty {}
+message Empty {
+}
 
 message NewRequest {
     string name = 1;
@@ -77,14 +78,14 @@ message Product {
     string id = 1;
     string name = 2;
     bool active = 3;
-    repeated string attributes = 4 ;
-    string description = 5 ;
-    repeated string images = 6 ;
-    map<string, string> metadata = 7 ;
-    bool shippable = 8 ;
-    string url = 9 ;
+    repeated string attributes = 4;
+    string description = 5;
+    repeated string images = 6;
+    map<string, string> metadata = 7;
+    bool shippable = 8;
+    string url = 9;
     repeated skupb.Sku skus = 10;
     Category type = 11;
-    int64 created = 998 ;
-    int64 updated = 999 ;
+    int64 created = 998;
+    int64 updated = 999;
 }

@@ -1,6 +1,5 @@
 /*
  * mongodb_ebenchmark - Mongodb grpc proxy benchmark for e-commerce workload (still in dev)
- *
  * Copyright (c) 2020 - Chen, Xidong <chenxidong2009@hotmail.com>
  *
  * All rights reserved.
@@ -12,6 +11,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 package proxy
@@ -162,7 +162,7 @@ func (client *Client) Close() (err error) {
 //     http://www.mongodb.org/display/DOCS/Querying
 //     http://www.mongodb.org/display/DOCS/Advanced+Queries
 //
-func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []interface{}, err error) {
+func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []bson.M, err error) {
 	filterBytes, err := bson.Marshal(query.Filter)
 	if err != nil {
 		log.Errorf("%s: marshal filter error", Find)
@@ -181,20 +181,22 @@ func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []inter
 		readPref = mgo.Primary
 	}
 
+	// TODO add params
 	request := mprpc.FindQuery{
 		Collection:  client.Collection,
 		Filter:      filterBytes,
-		Skip:        0,
+		Skip:        query.Skip,
 		Maxtimems:   -1,
 		Maxscan:     0,
 		Prefetch:    prefetch,
 		Batchsize:   client.config.BatchSize,
 		Readpref:    int32(readPref),
-		Findone:     false,
+		Findone:     query.FindOne,
 		Partial:     client.config.AllowPartial,
 		Readconcern: readConcern,
 		Comment:     FindIter,
 		Rpctimeout:  client.config.RpcTimeout,
+		Hint:        query.UsingIndex,
 	}
 
 	if query.Amp != nil {
@@ -224,7 +226,7 @@ func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []inter
 		log.Error(err)
 	}
 	for _, r := range resultSet.Results {
-		var doc interface{}
+		var doc bson.M
 		if err = bson.Unmarshal(r.Val, &doc); err != nil {
 			log.Error(err)
 		}
@@ -412,7 +414,8 @@ func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInf
 		Filter:       b,
 		Writeoptions: wOptions,
 	}
-	if _, err = client.rpcClient.Remove(ctx, removeOps); err != nil {
+	log.Info(removeOps)
+	if changeInfo, err = client.rpcClient.Remove(ctx, removeOps); err != nil {
 		log.Error(err)
 	}
 	return

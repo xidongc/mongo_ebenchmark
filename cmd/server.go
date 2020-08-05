@@ -1,6 +1,5 @@
 /*
  * mongodb_ebenchmark - Mongodb grpc proxy benchmark for e-commerce workload (still in dev)
- *
  * Copyright (c) 2020 - Chen, Xidong <chenxidong2009@hotmail.com>
  *
  * All rights reserved.
@@ -12,6 +11,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
 package main
@@ -21,18 +21,18 @@ import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
-	"github.com/xidongc/mongodb_ebenchmark/model/order/orderpb"
-	order "github.com/xidongc/mongodb_ebenchmark/model/order/service"
-	"github.com/xidongc/mongodb_ebenchmark/model/payment/paymentpb"
-	payment "github.com/xidongc/mongodb_ebenchmark/model/payment/service"
-	"github.com/xidongc/mongodb_ebenchmark/model/product/productpb"
-	product "github.com/xidongc/mongodb_ebenchmark/model/product/service"
-	sku "github.com/xidongc/mongodb_ebenchmark/model/sku/service"
-	"github.com/xidongc/mongodb_ebenchmark/model/sku/skupb"
-	user "github.com/xidongc/mongodb_ebenchmark/model/user/service"
-	"github.com/xidongc/mongodb_ebenchmark/model/user/userpb"
-	"github.com/xidongc/mongodb_ebenchmark/pkg/proxy"
-	server "github.com/xidongc/mongodb_ebenchmark/pkg/server"
+	"github.com/xidongc/mongo_ebenchmark/model/order/orderpb"
+	order "github.com/xidongc/mongo_ebenchmark/model/order/service"
+	"github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb"
+	payment "github.com/xidongc/mongo_ebenchmark/model/payment/service"
+	"github.com/xidongc/mongo_ebenchmark/model/product/productpb"
+	product "github.com/xidongc/mongo_ebenchmark/model/product/service"
+	sku "github.com/xidongc/mongo_ebenchmark/model/sku/service"
+	"github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
+	user "github.com/xidongc/mongo_ebenchmark/model/user/service"
+	"github.com/xidongc/mongo_ebenchmark/model/user/userpb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
+	server "github.com/xidongc/mongo_ebenchmark/pkg/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"

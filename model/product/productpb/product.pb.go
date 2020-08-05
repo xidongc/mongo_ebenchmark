@@ -9,7 +9,7 @@ package productpb
 import (
 	context "context"
 	proto "github.com/golang/protobuf/proto"
-	skupb "github.com/xidongc/mongodb_ebenchmark/model/sku/skupb"
+	skupb "github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package skupb;
 
-option go_package = "github.com/xidongc/mongodb_ebenchmark/model/sku/skupb";
+option go_package = "github.com/xidongc/mongo_ebenchmark/model/sku/skupb";
 
 import "payment/paymentpb/payment.proto";
 import "google/api/annotations.proto";
 
-service SkuService{
-    rpc New (NewRequest) returns (Sku) {
+service SkuService {
+    rpc New (UpsertRequest) returns (Sku) {
         option (google.api.http) = {
         post: "/sku"
         body: "*"
@@ -20,12 +20,6 @@ service SkuService{
         body: "*"
     };
     }
-    rpc Update (UpdateRequest) returns (Sku) {
-        option (google.api.http) = {
-        put: "/sku"
-        body: "*"
-    };
-    }
     rpc Delete (DeleteRequest) returns (Empty) {
         option (google.api.http) = {
         delete: "/sku"
@@ -34,17 +28,23 @@ service SkuService{
     }
 }
 
-message NewRequest {
+message UpsertRequest {
     string name = 1;
     paymentpb.Currency currency = 2;
     bool active = 3;
-    uint64 price = 4;
-    string parent = 5;
+    string productId = 4;
+    uint64 price = 5;
     map<string, string> metadata = 6;
     string image = 7;
-    PackageDimensions packageDimensions = 8;
-    Inventory inventory = 9;
-    map<string, string> attributes = 10;
+    string skuLabel = 8;
+    PackageDimensions packageDimensions = 9;
+    Inventory inventory = 10;
+    map<string, string> attributes = 11;
+    bool hasBattery = 12;
+    bool hasLiquid = 13;
+    bool hasSensitive = 14;
+    string description = 15;
+    string supplier = 16;
 }
 
 message Empty {
@@ -52,31 +52,17 @@ message Empty {
 }
 
 message GetRequest {
-    string id = 1;
+    string name = 1;
 }
 
 message DeleteRequest {
-    string id = 1;
-}
-
-message UpdateRequest {
-    string id = 1;
-    string name = 2;
-    paymentpb.Currency currency = 3;
-    bool active = 4;
-    uint64 price = 5;
-    string parent = 6;
-    map<string, string> metadata = 7;
-    string image = 8;
-    PackageDimensions packageDimensions = 9;
-    Inventory inventory = 10;
-    map<string, string> attributes = 11;
+    string name = 1;
 }
 
 message Sku {
     int64 id = 1;
     string name = 2;
-    uint64 price = 3;  // dollar
+    uint64 price = 3; // dollar
     paymentpb.Currency currency = 4;
     bool active = 5;
     string productId = 6;
@@ -99,7 +85,7 @@ message Sku {
 message Inventory {
     int64 skuId = 1;
     int64 warehouseId = 2;
-    int64 quantity = 3;  // available quantity
+    int64 quantity = 3; // available quantity
     Type type = 4;
     enum Type {
         Infinite = 0;

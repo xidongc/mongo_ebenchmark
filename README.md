@@ -52,7 +52,7 @@ repo `github.com/xidongc-wish/mp-server` with limited access only.
 the project is managed by go mod, and can be installed by running
 
 ```bash
-go get github.com/xidongc/mongodb_ebenchmark
+go get github.com/xidongc/mongo_ebenchmark
 ```
 
 -------------------------

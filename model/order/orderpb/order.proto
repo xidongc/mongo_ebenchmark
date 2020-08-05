@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/xidongc/mongodb_ebenchmark/model/order/orderpb";
+option go_package = "github.com/xidongc/mongo_ebenchmark/model/order/orderpb";
 
 package orderpb;
 
@@ -8,13 +8,13 @@ import "payment/paymentpb/payment.proto";
 import "google/api/annotations.proto";
 
 service OrderService {
-    rpc New(NewRequest) returns (Order) {
+    rpc New (NewRequest) returns (Order) {
         option (google.api.http) = {
         post: "/order"
         body: "*"
     };
     }
-    rpc Get(GetRequest) returns (Order) {
+    rpc Get (GetRequest) returns (Order) {
         option (google.api.http) = {
         get: "/order"
         body: "*"
@@ -98,7 +98,7 @@ message Item {
     string productId = 2;
     string name = 3;
     int64 quantity = 4;
-    int64 amount = 5;  // per item
+    int64 amount = 5; // per item
     paymentpb.Currency currency = 6;
     string description = 7;
     Sensitivity sensitivity = 8;
