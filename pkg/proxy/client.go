@@ -523,6 +523,7 @@ func (client *Client) FindAndModify(ctx context.Context, param *FindModifyParam)
 		wOptions = getSafeWriteOptions()
 	}
 
+	// TODO add params back
 	request := mprpc.FindAndModifyOperation{
 		Collection:   client.Collection,
 		Filter:       filterBytes,

@@ -34,31 +34,45 @@ type Service struct {
 }
 
 // Create User
-func (s Service) New(ctx context.Context, req *userpb.NewRequest) (*userpb.User, error) {
-	user := userpb.User{
+func (s Service) New(ctx context.Context, req *userpb.NewRequest) (user *userpb.User, err error) {
+	 reqUser := userpb.User{
 		Name:     req.GetName(),
-		Metadata: req.GetMetadata(),
 		Active:   req.GetActive(),
+		Nickname: req.GetNickname(),
+		Email:	  req.GetEmail(),
+		Balance:  req.GetBalance(),
+		Currency: req.GetCurrency(),
+		Image: 	  req.GetImage(),
+		Pwd:	  req.GetPwd(),
+		Metadata: req.GetMetadata(),
 	}
 
-	var docs []interface{}
-	docs = append(docs, user)
+	var desired bson.M
+    if err = mapstructure.Decode(reqUser, &desired); err != nil {
+	    log.Error(err)
+    }
 
-	param := &proxy.InsertParam{
-		Docs: docs,
-		Amp:  s.Amplifier,
+	param := proxy.FindModifyParam{
+		Filter:   bson.M{"Nickname": req.Nickname},
+		Desired:  desired,
+		Mode:     proxy.FindAndUpsert,
+		SortRule: nil,
+		Fields:   nil,
+		Amp:      s.Amplifier,
 	}
 
-	if err := s.Storage.Insert(ctx, param); err != nil {
+	result, err := s.Storage.FindAndModify(ctx, &param)
+	if err != nil {
 		log.Error(err)
-		return nil, err
 	}
-	return &user, nil
+	err = mapstructure.Decode(result, &user)
+	return
 }
 
+// Get User
 func (s Service) Get(ctx context.Context, req *userpb.GetRequest) (user *userpb.User, err error) {
 	param := &proxy.QueryParam{
-		Filter:  bson.M{"_id": req.Id},
+		Filter:  bson.M{"Nickname": req.GetNickname()},
 		FindOne: true,
 		Amp:     s.Amplifier,
 	}
@@ -72,42 +86,46 @@ func (s Service) Get(ctx context.Context, req *userpb.GetRequest) (user *userpb.
 		return user, errors.New("no result found")
 	}
 
-	err = mapstructure.Decode(results[0], user)
+	err = mapstructure.Decode(results[0], &user)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return user, nil
 }
 
-func (s Service) Update(ctx context.Context, req *userpb.UpdateRequest) (user *userpb.User, err error) {
-	var updateParams bson.M
-	if err = mapstructure.Decode(req, &updateParams); err != nil {
-		log.Error(err)
-		return
-	}
-	updateQuery := &proxy.UpdateParam{
-		Filter: bson.M{"_id": req.Id},
-		Update: updateParams,
-		Upsert: false,
-		Multi:  true,
-		Amp:    s.Amplifier,
-	}
-	_, err = s.Storage.Update(ctx, updateQuery)
+// Deactivate User
+func (s Service) Deactivate(ctx context.Context, req *userpb.DeleteRequest) (user *userpb.User, err error) {
+	user, err = s.Get(ctx, &userpb.GetRequest{Nickname: req.Nickname})
 	if err != nil {
-		return
+		log.Error(err)
 	}
+	user.Active = false
+
+	var desired bson.M
+
+	if err = mapstructure.Decode(user, &desired); err != nil {
+		log.Error(err)
+	}
+
+	params := &proxy.FindModifyParam{
+		Filter:   bson.M{"Nickname": req.GetNickname()},
+		Desired:  desired,
+		Mode:     proxy.FindAndUpdate,
+		SortRule: nil,
+		Fields:   nil,
+		Amp:      s.Amplifier,
+	}
+
+	result, err := s.Storage.FindAndModify(ctx, params)
+	if err != nil {
+		log.Error(err)
+	}
+	err = mapstructure.Decode(result, &user)
 	return
 }
 
-func (s Service) Delete(ctx context.Context, req *userpb.DeleteRequest) (*userpb.Empty, error) {
-	removeQuery := &proxy.RemoveParam{
-		Filter: bson.M{"_id": req.Id},
-		Amp:    s.Amplifier,
-	}
-	_, err := s.Storage.Remove(ctx, removeQuery)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-	return &userpb.Empty{}, nil
+// Create User Service client
+func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+	client, _ = proxy.NewClient(config, ns, cancel)
+	return
 }

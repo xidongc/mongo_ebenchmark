@@ -98,17 +98,17 @@ func main() {
 	}
 	paymentService := &payment.Service{
 		Storage:   storageClient,
-		Amplifier: amplifyOptions,
+		Amplifier:  amplifyOptions,
 	}
 
 	orderService := &order.Service{
 		Storage:   storageClient,
-		Amplifier: amplifyOptions,
+		Amplifier:  amplifyOptions,
 	}
 
 	userService := &user.Service{
-		Storage:   storageClient,
-		Amplifier: amplifyOptions,
+		Storage:   *user.NewClient(proxyConfig, cancel),
+		Amplifier:  amplifyOptions,
 	}
 
 	productService := &product.Service{

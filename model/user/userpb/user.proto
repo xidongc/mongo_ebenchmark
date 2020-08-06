@@ -20,13 +20,7 @@ service UserService {
         body: "*"
     };
     }
-    rpc Update (UpdateRequest) returns (User) {
-        option (google.api.http) = {
-        put: "/user"
-        body: "*"
-    };
-    }
-    rpc Delete (DeleteRequest) returns (Empty) {
+    rpc Deactivate(DeleteRequest) returns (User) {
         option (google.api.http) = {
         delete: "/user"
         body: "*"
@@ -51,24 +45,23 @@ message Empty {
 }
 
 message GetRequest {
-    string id = 1;
+    string nickname = 1;
 }
 
 message UpdateRequest {
-    string id = 1;
+    string nickname = 1;
     string name = 2;
-    string nickname = 3;
+    string pwd = 3;
     string email = 4;
     bool active = 5;
     int64 balance = 6;
     paymentpb.Currency currency = 7;
     string image = 8;
-    string pwd = 9;
-    map<string, string> metadata = 10;
+    map<string, string> metadata = 9;
 }
 
 message DeleteRequest {
-    string id = 1;
+    string nickname = 1;
 }
 
 
