@@ -23,19 +23,28 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongo_ebenchmark/model/product/productpb"
+	skuService "github.com/xidongc/mongo_ebenchmark/model/sku/service"
+	"github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
+	"strings"
 )
 
 const ns = "product"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier proxy.Amplifier
+	Amplifier  proxy.Amplifier
+	SkuService *skuService.Service
 }
 
-// Create a product
+// Create Product
 func (s Service) New(ctx context.Context, req *productpb.NewRequest) (*productpb.Product, error) {
+	if _, err := s.Get(ctx, &productpb.GetRequest{Id: req.Id}); err == nil {
+		return nil, errors.New("please use update for exist record")
+	}
+
 	product := productpb.Product{
+		Id:			 req.GetId(),
 		Name:        req.GetName(),
 		Description: req.GetDescription(),
 		Shippable:   req.GetShippable(),
@@ -58,14 +67,15 @@ func (s Service) New(ctx context.Context, req *productpb.NewRequest) (*productpb
 		log.Error(err)
 		return nil, err
 	}
+	log.Infof("%+v", product)
 	return &product, nil
 }
 
-// get a product
+// Get product
 func (s Service) Get(ctx context.Context, req *productpb.GetRequest) (product *productpb.Product, err error) {
 
 	param := &proxy.QueryParam{
-		Filter:  bson.M{"_id": req.Id},
+		Filter:  bson.M{"id": req.Id},
 		FindOne: true,
 		Amp:     s.Amplifier,
 	}
@@ -79,39 +89,54 @@ func (s Service) Get(ctx context.Context, req *productpb.GetRequest) (product *p
 		return product, errors.New("no result found")
 	}
 
-	err = mapstructure.Decode(results[0], product)
-	if err != nil {
+	err = mapstructure.Decode(results[0], &product)
+	if err != nil || product == nil {
 		log.Fatal(err)
+	}
+
+	skus, err := s.SkuService.GetProductSkus(ctx, &skupb.GetProductSkusRequest{ProductId: req.Id})
+	if skus != nil {
+		product.Skus = skus.GetSkus()
 	}
 	return product, nil
 }
 
-// update a product
+// Update product and return updated
 func (s Service) Update(ctx context.Context, req *productpb.UpdateRequest) (product *productpb.Product, err error) {
 	var updateParams bson.M
 	if err = mapstructure.Decode(req, &updateParams); err != nil {
 		log.Error(err)
 		return
 	}
+	updateLowerParams := make (bson.M, len(updateParams))
+	for key, val := range updateParams {
+		r := []rune(key)
+		key = strings.ToLower(string(r[0])) + string(r[1:])
+		updateLowerParams[strings.ToLower(key)] = val
+	}
 	updateQuery := &proxy.UpdateParam{
-		Filter: bson.M{"_id": req.Id},
-		Update: updateParams,
+		Filter: bson.M{"id": req.Id},
+		Update: updateLowerParams,
 		Upsert: false,
-		Multi:  true,
+		Multi:  false,
 		Amp:    s.Amplifier,
 	}
-	_, err = s.Storage.Update(ctx, updateQuery)
+	changeInfo, err := s.Storage.Update(ctx, updateQuery)
 	if err != nil {
 		return
 	}
-	// TODO not return product
+	log.Info(changeInfo)
+	product, err = s.Get(ctx, &productpb.GetRequest{Id: req.Id})
+	if err != nil {
+		log.Error(err)
+	}
 	return
 }
 
-// Delete a product
+// Delete product
 func (s Service) Delete(ctx context.Context, req *productpb.DeleteRequest) (*productpb.Empty, error) {
 	removeQuery := &proxy.RemoveParam{
-		Filter: bson.M{"_id": req.Id},
+		Filter: bson.M{"id": req.Id},
 		Amp:    s.Amplifier,
 	}
 	_, err := s.Storage.Remove(ctx, removeQuery)
@@ -119,5 +144,20 @@ func (s Service) Delete(ctx context.Context, req *productpb.DeleteRequest) (*pro
 		log.Error(err)
 		return nil, err
 	}
+
+	skus, err := s.SkuService.GetProductSkus(ctx, &skupb.GetProductSkusRequest{ProductId: req.Id})
+	if skus == nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	for _, sku := range skus.GetSkus() {
+		_, err = s.SkuService.Delete(ctx, &skupb.DeleteRequest{Name: sku.GetName()})
+	}
 	return &productpb.Empty{}, nil
+}
+
+// Create Product Service client
+func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+	client, _ = proxy.NewClient(config, ns, cancel)
+	return
 }

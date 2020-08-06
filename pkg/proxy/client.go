@@ -201,14 +201,14 @@ func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []bson.
 
 	if query.Amp != nil {
 		report, err := runner.Run(
-			FindIter,
+			Find,
 			client.Host,
 			runner.WithProtoset(client.ProtoFile),
 			runner.WithConcurrency(query.Amp.Concurrency),
 			runner.WithConnections(query.Amp.Connections),
 			runner.WithCPUs(query.Amp.CPUs),
 			runner.WithData(request),
-			runner.WithInsecure(client.config.Insecure),
+			runner.WithInsecure(true),
 		)
 		if err != nil {
 			log.Fatal(err.Error())

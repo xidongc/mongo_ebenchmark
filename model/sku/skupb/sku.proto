@@ -26,6 +26,12 @@ service SkuService {
         body: "*"
     };
     }
+    rpc  GetProductSkus (GetProductSkusRequest) returns (Skus) {
+        option (google.api.http) = {
+        post: "/sku"
+        body: "*"
+    };
+    }
 }
 
 message UpsertRequest {
@@ -49,6 +55,10 @@ message UpsertRequest {
 
 message Empty {
 
+}
+
+message GetProductSkusRequest {
+    string productId = 1;
 }
 
 message GetRequest {
@@ -100,3 +110,6 @@ message PackageDimensions {
     double width = 4;
 }
 
+message Skus {
+    repeated Sku skus = 1;
+}

@@ -31,7 +31,7 @@ const ns = "sku"
 // SKU Service
 type Service struct {
 	Storage   proxy.Client
-	Amplifier proxy.Amplifier
+	Amplifier  proxy.Amplifier
 }
 
 // Find SKU
@@ -76,7 +76,7 @@ func (s *Service) Delete(ctx context.Context, req *skupb.DeleteRequest) (*skupb.
 	return &skupb.Empty{}, nil
 }
 
-// Create SKU inserts if SKU not recorded, or update sku if exist
+// Create SKU inserts if SKU not recorded, or update SKU if exist
 func (s *Service) New(ctx context.Context, req *skupb.UpsertRequest) (sku *skupb.Sku, err error) {
 
 	var inventories []*skupb.Inventory
@@ -146,6 +146,39 @@ func (s *Service) New(ctx context.Context, req *skupb.UpsertRequest) (sku *skupb
 		log.Errorf("sku error: storage failed with %s", err)
 	}
 
+	return
+}
+
+// Find skus info belong to a product
+func (s *Service) GetProductSkus(ctx context.Context, req *skupb.GetProductSkusRequest) (skus *skupb.Skus, err error) {
+	param := &proxy.QueryParam{
+		Filter:  bson.M{"ProductId": req.GetProductId()},
+		FindOne: false,
+		Amp:     s.Amplifier,
+	}
+
+	results, err := s.Storage.Find(ctx, param)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	if len(results) == 0 {
+		return
+	}
+
+	var productSkus []*skupb.Sku
+	for _, result := range results {
+		var sku *skupb.Sku
+		err = mapstructure.Decode(result, &sku)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Infof("received sku: %+v", sku)
+		productSkus = append(productSkus, sku)
+	}
+	skus = &skupb.Skus {
+		Skus: productSkus,
+	}
 	return
 }
 

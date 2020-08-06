@@ -19,8 +19,10 @@ build/ebenchmark.darwin:
 
 pb:
 	protoc -I include/googleapis -I model -I model/sku/skupb --go_out=plugins=grpc:$(go env GOPATH)/src model/sku/skupb/sku.proto
+	protoc --include_imports -I ./include/googleapis -I model -I model/sku/skupb --descriptor_set_out=./model/sku/sku.protoset ./model/sku/skupb/sku.proto
 	protoc -I include/googleapis -I model/payment --go_out=plugins=grpc:$(go env GOPATH)/src model/payment/paymentpb/payment.proto
 	protoc -I include/googleapis -I model -I model/product/productpb --go_out=plugins=grpc:$(go env GOPATH)/src model/product/productpb/product.proto
+	protoc --include_imports -I ./include/googleapis -I model -I model/product/productpb --descriptor_set_out=./model/product/product.protoset ./model/product/productpb/product.proto
 	protoc -I include/googleapis -I model -I model/user/userpb --go_out=plugins=grpc:$(go env GOPATH)/src model/user/userpb/user.proto
 	protoc -I include/googleapis -I model -I model/order/orderpb --go_out=plugins=grpc:$(go env GOPATH)/src model/order/orderpb/order.proto
 
@@ -32,6 +34,18 @@ sku.get:
 
 sku.delete:
 	ghz --insecure --protoset ./model/sku/sku.protoset --call skupb.SkuService.Delete -d '{"name": "xidong"}' -c 1 -n 1 0.0.0.0:50053
+
+product.new:
+	ghz --insecure --protoset ./model/product/product.protoset --call productpb.ProductService.New -d '{"id":"1234567", "name": "xidong", "active": false, "attributes": ["hello", "world"], "description": "hello world", "images": ["test", "test1"], "metadata": {"name": "xidongc", "product": "xidongc"}, "shippable": false, "url": "www.google.com"}' -c 1 -n 1 0.0.0.0:50053
+
+product.update:
+	ghz --insecure --protoset ./model/product/product.protoset --call productpb.ProductService.Update -d '{"id":"1234567", "name": "xidong", "active": false, "attributes": ["hello", "world"], "description": "hello world", "images": ["test", "test1"], "metadata": {"name": "xidongc", "product": "xidongc"}, "shippable": false, "url": "www.google.com"}' -c 1 -n 1 0.0.0.0:50053
+
+product.get:
+	ghz --insecure --protoset ./model/product/product.protoset --call productpb.ProductService.Get -d '{"id":"1234567"}' -c 1 -n 1 0.0.0.0:50053
+
+product.delete:
+	ghz --insecure --protoset ./model/product/product.protoset --call productpb.ProductService.Delete -d '{"id":"1234567"}' -c 1 -n 1 0.0.0.0:50053
 
 db.insert:
 	ghz --insecure --protoset ./pkg/proxy/rpc.protoset --call mprpc.MongoProxy.Insert -d '[{"documents":[{"val":"WQAAAAdfaWQAXw\/F2PfpmwABuq0PAnN0YXRlAAcAAABhY3RpdmUAAm5hbWUACQAAAHhpZG9uZ2MzAAJtc2dzAAgAAABzdWNjZXNzABBudW1iZXIAAwAAAAA="}],"writeoptions":{"rpctimeout":30000,"writetimeout":null,"j":null,"fsync":null,"writeconcern":1},"collection":{"collection":"mpc","database":"mpc"}}]' -c 1 -n 1 0.0.0.0:50051

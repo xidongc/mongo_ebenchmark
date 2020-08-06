@@ -112,8 +112,9 @@ func main() {
 	}
 
 	productService := &product.Service{
-		Storage:   storageClient,
-		Amplifier: amplifyOptions,
+		Storage:    *product.NewClient(proxyConfig, cancel),
+		Amplifier:    amplifyOptions,
+		SkuService:  skuService,
 	}
 
 	skupb.RegisterSkuServiceServer(svr, skuService)
