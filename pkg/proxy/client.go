@@ -24,7 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo"
 	"github.com/xidongc-wish/mgo/bson"
-	"github.com/xidongc-wish/mongoproxy/mprpc"
+	"github.com/xidongc/mongo_ebenchmark/mprpc"
 	"google.golang.org/grpc"
 	"os"
 	"sync/atomic"

@@ -19,6 +19,7 @@ build/ebenchmark.darwin:
 
 pb.payment:
 	protoc -I include/googleapis -I model/payment --go_out=plugins=grpc:$(go env GOPATH)/src model/payment/paymentpb/payment.proto
+	protoc --include_imports -I ./include/googleapis -I model -I model/payment/paymentpb --descriptor_set_out=./model/payment/payment.protoset ./model/payment/paymentpb/payment.proto
 
 pb.order:
 	protoc -I include/googleapis -I model -I model/order/orderpb --go_out=plugins=grpc:$(go env GOPATH)/src model/order/orderpb/order.proto
@@ -61,6 +62,9 @@ user.new:
 
 user.get:
 	ghz --insecure --protoset ./model/user/user.protoset --call userpb.UserService.Get -d '{"nickname": "xidongc"}' -c 1 -n 1 0.0.0.0:50053
+
+user.deactivate:
+	ghz --insecure --protoset ./model/user/user.protoset --call userpb.UserService.Deactivate -d '{"nickname": "xidongc"}' -c 1 -n 1 0.0.0.0:50053
 
 db.insert:
 	ghz --insecure --protoset ./pkg/proxy/rpc.protoset --call mprpc.MongoProxy.Insert -d '[{"documents":[{"val":"WQAAAAdfaWQAXw\/F2PfpmwABuq0PAnN0YXRlAAcAAABhY3RpdmUAAm5hbWUACQAAAHhpZG9uZ2MzAAJtc2dzAAgAAABzdWNjZXNzABBudW1iZXIAAwAAAAA="}],"writeoptions":{"rpctimeout":30000,"writetimeout":null,"j":null,"fsync":null,"writeconcern":1},"collection":{"collection":"mpc","database":"mpc"}}]' -c 1 -n 1 0.0.0.0:50051

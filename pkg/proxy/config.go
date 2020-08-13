@@ -18,7 +18,7 @@ package proxy
 
 import (
 	"github.com/xidongc-wish/mgo"
-	"github.com/xidongc-wish/mongoproxy/mprpc"
+	"github.com/xidongc/mongo_ebenchmark/mprpc"
 	"time"
 )
 

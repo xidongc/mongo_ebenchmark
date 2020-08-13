@@ -19,10 +19,9 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/mitchellh/mapstructure"
 	log "github.com/sirupsen/logrus"
-	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb"
+	"github.com/xidongc/mongo_ebenchmark/model/payment/service/provider"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
@@ -30,18 +29,35 @@ const ns = "payment"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier proxy.Amplifier
+	Amplifier  proxy.Amplifier
 }
 
 // New Charge
 func (s Service) NewCharge(ctx context.Context, req *paymentpb.ChargeRequest) (*paymentpb.Charge, error) {
-	charge := paymentpb.Charge{
-		Currency:     req.GetCurrency(),
-		ChargeAmount: req.GetAmount(),
+	providerId := req.GetPaymentProviderId()
+	var provide Provider
+
+	// TODO add more
+	switch providerId{
+	case paymentpb.PaymentProviderId_AliPay:
+		provide = &provider.AliPay{}
+	default:
+		provide = &provider.AliPay{}
+	}
+
+	charge, err := provide.Charge(req)
+
+	if err != nil {
+		log.Warning("do refund")
+		// TODO do refund
+	}
+
+	if charge == nil {
+		return nil, errors.New("error")
 	}
 
 	var docs []interface{}
-	docs = append(docs, charge)
+	docs = append(docs, *charge)
 
 	param := &proxy.InsertParam{
 		Docs: docs,
@@ -52,49 +68,21 @@ func (s Service) NewCharge(ctx context.Context, req *paymentpb.ChargeRequest) (*
 		log.Error(err)
 		return nil, err
 	}
-	return &charge, nil
+	return charge, nil
 }
 
 // Refund Charge
-func (s Service) RefundCharge(ctx context.Context, req *paymentpb.RefundRequest) (*paymentpb.Charge, error) {
-	charge := paymentpb.Charge{
-		ChargeAmount: -req.GetAmount(),
-	}
-
-	var docs []interface{}
-	docs = append(docs, charge)
-
-	param := &proxy.InsertParam{
-		Docs: docs,
-		Amp:  s.Amplifier,
-	}
-
-	if err := s.Storage.Insert(ctx, param); err != nil {
-		log.Error(err)
-		return nil, err
-	}
-	return &charge, nil
+func (s Service) RefundCharge(ctx context.Context, req *paymentpb.RefundRequest) (charge *paymentpb.Charge, err error) {
+	return
 }
 
+// Get Charge
 func (s Service) Get(ctx context.Context, req *paymentpb.GetRequest) (charge *paymentpb.Charge, err error) {
-	param := &proxy.QueryParam{
-		Filter:  bson.M{"_id": req.Id},
-		FindOne: true,
-		Amp:     s.Amplifier,
-	}
+	return
+}
 
-	results, err := s.Storage.Find(ctx, param)
-
-	if err != nil || len(results) > 1 {
-		log.Error(err)
-		return
-	} else if len(results) == 0 {
-		return charge, errors.New("no result found")
-	}
-
-	err = mapstructure.Decode(results[0], charge)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return charge, nil
+// Create Payment Service client
+func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+	client, _ = proxy.NewClient(config, ns, cancel)
+	return
 }

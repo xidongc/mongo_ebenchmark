@@ -97,7 +97,7 @@ func main() {
 		Amplifier: amplifyOptions,
 	}
 	paymentService := &payment.Service{
-		Storage:   storageClient,
+		Storage:   *payment.NewClient(proxyConfig, cancel),
 		Amplifier:  amplifyOptions,
 	}
 
@@ -126,7 +126,7 @@ func main() {
 	reflection.Register(svr)
 
 	go func() {
-		addr := fmt.Sprintf("%s:%d", config.ServerAddr, config.ServerPort)
+		addr := fmt.Sprintf("%s:%d", "127.0.0.1", config.ServerPort)
 		log.Infof("Start listening on %s", addr)
 		lis, err := net.Listen("tcp4", addr)
 		if err != nil {
