@@ -16,3 +16,4 @@ vendor/
 bin/
 mprpc/
 pkg/proxy/rpc.protoset
+
