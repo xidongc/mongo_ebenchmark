@@ -17,13 +17,11 @@ service SkuService {
     rpc Get (GetRequest) returns (Sku) {
         option (google.api.http) = {
         get: "/sku"
-        body: "*"
     };
     }
     rpc Delete (DeleteRequest) returns (Empty) {
         option (google.api.http) = {
         delete: "/sku"
-        body: "*"
     };
     }
     rpc  GetProductSkus (GetProductSkusRequest) returns (Skus) {

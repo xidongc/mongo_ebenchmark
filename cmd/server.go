@@ -94,7 +94,7 @@ func main() {
 
 	skuService := &sku.Service{
 		Storage:   storageClient,
-		Amplifier: amplifyOptions,
+		Amplifier:  amplifyOptions,
 	}
 	paymentService := &payment.Service{
 		Storage:   *payment.NewClient(proxyConfig, cancel),

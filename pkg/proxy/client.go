@@ -213,12 +213,13 @@ func (client *Client) Find(ctx context.Context, query *QueryParam) (docs []bson.
 		if err != nil {
 			log.Fatal(err.Error())
 		}
+		file, err := os.Create("results/test_find.html")
 		p := printer.ReportPrinter{
-			Out:    os.Stdout,
+			Out:    file,
 			Report: report,
 		}
 
-		_ = p.Print("pretty")
+		_ = p.Print("html")
 	}
 
 	resultSet, err := client.rpcClient.Find(ctx, &request)
@@ -291,7 +292,7 @@ func (client *Client) FindIter(ctx context.Context, query *QueryParam) (stream m
 		runner.WithConnections(query.Amp.Connections),
 		runner.WithCPUs(query.Amp.CPUs),
 		runner.WithData(request),
-		runner.WithInsecure(client.config.Insecure),
+		runner.WithInsecure(true),
 	)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -462,7 +463,7 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 			runner.WithConnections(param.Amp.Connections),
 			runner.WithCPUs(param.Amp.CPUs),
 			runner.WithData(request),
-			runner.WithInsecure(client.config.Insecure),
+			runner.WithInsecure(true),
 		)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -562,7 +563,7 @@ func (client *Client) HealthCheck() (err error) {
 		client.Host,
 		runner.WithProtoset(client.ProtoFile),
 		runner.WithData(empty),
-		runner.WithInsecure(client.config.Insecure),
+		runner.WithInsecure(true),
 	)
 	if err != nil {
 		atomic.StoreInt32(&client.Healthy, 0)

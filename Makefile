@@ -1,3 +1,7 @@
+SKAFFOLD	:= 	bin/skaffold
+PROTOC 		:= 	bin/protoc
+FFJSON		:=  bin/ffjson
+
 default: \
 	vendor \
 	build/ebenchmark.linux \
@@ -7,14 +11,22 @@ vendor: go.mod go.sum
 	go mod tidy
 	go mod vendor
 
+deploy:
+	aws ecr get-login-password --region cn-north-1 | docker login --username AWS --password-stdin 030836370731.dkr.ecr.cn-north-1.amazonaws.com.cn
+	$(SKAFFOLD) run --tail
+
+dev:
+	aws ecr get-login-password --region cn-north-1 | docker login --username AWS --password-stdin 030836370731.dkr.ecr.cn-north-1.amazonaws.com.cn
+	$(SKAFFOLD) dev
+
 build/ebenchmark.linux:
 	@echo "$@"
-	@GOOS=linux CGO_ENABLED=0 go build -o bin/ebenchmark.linux \
+	@GOOS=linux CGO_ENABLED=0 go build -o out/ebenchmark.linux \
 		github.com/xidongc/mongo_ebenchmark/cmd
 
 build/ebenchmark.darwin:
 	@echo "$@"
-	@GOOS=darwin CGO_ENABLED=0 go build -o bin/ebenchmark.darwin \
+	@GOOS=darwin CGO_ENABLED=0 go build -o out/ebenchmark.darwin \
     	github.com/xidongc/mongo_ebenchmark/cmd
 
 pb.payment:

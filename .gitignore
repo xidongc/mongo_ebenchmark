@@ -15,5 +15,9 @@
 vendor/
 bin/
 mprpc/
-pkg/proxy/rpc.protoset
+out/
 
+# private files
+pkg/proxy/rpc.protoset
+deploy.yaml
+skaffold.yaml

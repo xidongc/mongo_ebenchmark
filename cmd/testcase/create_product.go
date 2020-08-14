@@ -16,6 +16,6 @@
 
 package main
 
-func test() {
 
-}
+
+

@@ -1,0 +1,80 @@
+#######################################################################
+# Mongo eBenchmark Service in Kubernetes
+#######################################################################
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ebenchmark
+  labels:
+    app: ebenchmark
+    service: ebenchmark
+  namespace: exp
+spec:
+  ports:
+    - name: tcp
+      protocol: TCP
+      port: 50053
+      targetPort: server-port
+  type: NodePort
+  selector:
+    app: ebenchmark
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ebenchmark
+  namespace: exp
+  labels:
+    app: ebenchmark
+    role: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ebenchmark
+  minReadySeconds: 30
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  template:
+    metadata:
+      name: ebenchmark
+      labels:
+        app: ebenchmark
+      annotations:
+        kubernetes.io/change-cause: init deploy
+    spec:
+      containers:
+        - name: ebenchmark
+          imagePullPolicy: IfNotPresent
+          image: 030836370731.dkr.ecr.cn-north-1.amazonaws.com.cn/xidongc/mbenchmark
+          env:
+            - name: PROTOSET_FILE
+              value: /protofile/rpc.protoset
+          ports:
+            - name: server-port
+              containerPort: 50053
+
+          command:
+            [
+              "/ebenchmark",
+              "--storage=rpc.rms.prod.bjs.i.wish.com",
+            ]
+          resources:
+            requests:
+              memory: "50Mi"
+              cpu: "100m"
+            limits:
+              memory: "200Mi"
+              cpu: "200m"
+      dnsConfig:
+        nameservers:
+          - 10.88.30.100
+          - 10.88.31.100
+        searches:
+          - bjs.i.wish.com
+      automountServiceAccountToken: false
