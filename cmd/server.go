@@ -31,8 +31,8 @@ import (
 	"github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
 	user "github.com/xidongc/mongo_ebenchmark/model/user/service"
 	"github.com/xidongc/mongo_ebenchmark/model/user/userpb"
-	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
-	server "github.com/xidongc/mongo_ebenchmark/pkg/server"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
+	server "github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
@@ -61,10 +61,10 @@ func main() {
 	maxRecvMsgSizeOpt := grpc.MaxRecvMsgSize(maxRecvMsgSize)
 
 	svr := grpc.NewServer(maxSendMsgSizeOpt, maxRecvMsgSizeOpt)
-	proxyConfig := &proxy.Config{
-		ServerIp:     config.ServerAddr,
-		Port:         config.ProxyPort,
-		Insecure:     config.Insecure,
+	proxyConfig := &cfg.ProxyConfig{
+		ProxyAddr:    config.ProxyAddr,
+		ProxyPort:    config.ProxyPort,
+		Secure:       config.Secure,
 		RpcTimeout:   config.RpcTimeout,
 		BatchSize:    config.BatchSize,
 		ReadPref:     config.ReadPref,
@@ -83,7 +83,7 @@ func main() {
 		}
 	}()
 
-	amplifyOptions := &proxy.AmplifyOptions{
+	amplifyOptions := &cfg.AmplifyOptions{
 		Connections:  config.Connections,
 		Concurrency:  config.Concurrency,
 		TotalRequest: config.TotalRequest,
@@ -94,27 +94,27 @@ func main() {
 
 	skuService := &sku.Service{
 		Storage:   storageClient,
-		Amplifier:  amplifyOptions,
+		Amplifier: amplifyOptions,
 	}
 	paymentService := &payment.Service{
 		Storage:   *payment.NewClient(proxyConfig, cancel),
-		Amplifier:  amplifyOptions,
+		Amplifier: amplifyOptions,
 	}
 
 	orderService := &order.Service{
 		Storage:   storageClient,
-		Amplifier:  amplifyOptions,
+		Amplifier: amplifyOptions,
 	}
 
 	userService := &user.Service{
 		Storage:   *user.NewClient(proxyConfig, cancel),
-		Amplifier:  amplifyOptions,
+		Amplifier: amplifyOptions,
 	}
 
 	productService := &product.Service{
 		Storage:    *product.NewClient(proxyConfig, cancel),
-		Amplifier:    amplifyOptions,
-		SkuService:  skuService,
+		Amplifier:  amplifyOptions,
+		SkuService: skuService,
 	}
 
 	skupb.RegisterSkuServiceServer(svr, skuService)

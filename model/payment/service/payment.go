@@ -22,6 +22,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb"
 	"github.com/xidongc/mongo_ebenchmark/model/payment/service/provider"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
@@ -29,7 +30,7 @@ const ns = "payment"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier  proxy.Amplifier
+	Amplifier cfg.Amplifier
 }
 
 // New Charge
@@ -38,7 +39,7 @@ func (s Service) NewCharge(ctx context.Context, req *paymentpb.ChargeRequest) (*
 	var provide Provider
 
 	// TODO add more
-	switch providerId{
+	switch providerId {
 	case paymentpb.PaymentProviderId_AliPay:
 		provide = &provider.AliPay{}
 	default:
@@ -82,7 +83,7 @@ func (s Service) Get(ctx context.Context, req *paymentpb.GetRequest) (charge *pa
 }
 
 // Create Payment Service client
-func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+func NewClient(config *cfg.ProxyConfig, cancel context.CancelFunc) (client *proxy.Client) {
 	client, _ = proxy.NewClient(config, ns, cancel)
 	return
 }

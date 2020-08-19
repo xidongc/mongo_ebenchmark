@@ -15,7 +15,7 @@ spec:
     - name: tcp
       protocol: TCP
       port: 50053
-      targetPort: server-port
+      targetPort: cfg-port
   type: NodePort
   selector:
     app: ebenchmark
@@ -56,7 +56,7 @@ spec:
             - name: PROTOSET_FILE
               value: /protofile/rpc.protoset
           ports:
-            - name: server-port
+            - name: cfg-port
               containerPort: 50053
 
           command:

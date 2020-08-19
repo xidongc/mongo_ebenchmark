@@ -14,7 +14,7 @@
  *
  */
 
-package proxy
+package cfg
 
 import (
 	"github.com/xidongc-wish/mgo"
@@ -22,36 +22,44 @@ import (
 	"time"
 )
 
+// Server Config
+type Config struct {
+	ProxyConfig
+	AmplifyOptions
+	ServerPort int  `long:"server-port" default:"50053" description:" api server port"`
+	Turbo      bool `long:"turbo" description:"enable turbo mode"`
+}
+
 // AmplifyOptions
 type Amplifier *AmplifyOptions
 
-// Proxy client config
-type Config struct {
-	ServerIp     string `short:"s" long:"storage" default:"127.0.0.1" description:"storage server address"`
-	Port         int    `short:"p" long:"port" default:"50051" description:"storage server port"`
-	Insecure     bool   `long:"insecure" description:"storage server connection secure"`
-	RpcTimeout   int64  `short:"t" long:"timeout" default:"25000" description:"request timeout"`
+// Proxy client cfg
+type ProxyConfig struct {
+	ProxyAddr    string `long:"proxy-addr" default:"127.0.0.1" description:"storage address"`
+	ProxyPort    int    `long:"proxy-port" default:"50051" description:"storage port"`
+	Secure       bool   `long:"https" description:"use tls to connect proxy backend"`
+	RpcTimeout   int64  `long:"rpc-timeout" default:"25000" description:"storage request timeout"`
 	BatchSize    int64  `short:"b" long:"batch" default:"10000" description:"batch size"`
-	ReadPref     int32  `short:"r" long:"readpref" default:"2" description:"read preference"`
+	ReadPref     int32  `short:"r" long:"read-pref" default:"2" description:"read preference"`
 	AllowPartial bool   `long:"partial" description:"allow partial"`
 }
 
-// AmplifyOptions for ghz
+// AmplifyOptions for amp
 type AmplifyOptions struct {
-	Connections  uint          `long:"connections" default:"1" description:"storage server address"`
-	Concurrency  uint          `long:"concurrency" default:"5" description:"storage server address"`
-	TotalRequest uint          `long:"requests" default:"20" description:"storage server address"`
-	QPS          uint          `long:"qps" description:"storage server address"`
-	Timeout      time.Duration `long:"timeout" description:"storage server address"`
-	CPUs         uint          `long:"cpu" default:"1" description:"storage server address"`
+	Connections  uint          `long:"connections" default:"1" description:"request connections for amp"`
+	Concurrency  uint          `long:"concurrency" default:"5" description:"request concurrency for amp"`
+	TotalRequest uint          `long:"requests" default:"20" description:"total perf requests sent for amp"`
+	QPS          uint          `long:"qps" description:"qps used for amp"`
+	Timeout      time.Duration `long:"timeout" description:"timeout for amp request to backend"`
+	CPUs         uint          `long:"cpu" default:"1" description:"cpus used for amp"`
 }
 
-// Create default config
-func DefaultConfig() (config *Config) {
-	config = &Config{
-		ServerIp:     "127.0.0.1",
-		Port:         50051,
-		Insecure:     true,
+// Create default cfg
+func DefaultConfig() (config *ProxyConfig) {
+	config = &ProxyConfig{
+		ProxyAddr:    "127.0.0.1",
+		ProxyPort:    50051,
+		Secure:       false,
 		RpcTimeout:   25000,
 		BatchSize:    10000,
 		ReadPref:     int32(mgo.Primary),
@@ -91,7 +99,7 @@ func Amplifer(options AmplifyOptions) *AmplifyOptions {
 //
 // merge fsync and J: https://jira.mongodb.org/browse/SERVER-11399
 //
-func getTurboWriteOptions() (wOptions *mprpc.WriteOptions) {
+func GetTurboWriteOptions() (wOptions *mprpc.WriteOptions) {
 	wOptions = &mprpc.WriteOptions{
 		Writeconcern: 1,
 		Writetimeout: 0,
@@ -107,7 +115,7 @@ func getTurboWriteOptions() (wOptions *mprpc.WriteOptions) {
 //
 // merge fsync and J: https://jira.mongodb.org/browse/SERVER-11399
 //
-func getSafeWriteOptions() (wOptions *mprpc.WriteOptions) {
+func GetSafeWriteOptions() (wOptions *mprpc.WriteOptions) {
 	wOptions = &mprpc.WriteOptions{
 		Writetimeout: 0,
 		Writemode:    "majority",

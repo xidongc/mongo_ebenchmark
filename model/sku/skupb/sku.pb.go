@@ -1217,7 +1217,7 @@ func (c *skuServiceClient) GetProductSkus(ctx context.Context, in *GetProductSku
 	return out, nil
 }
 
-// SkuServiceServer is the server API for SkuService service.
+// SkuServiceServer is the cfg API for SkuService service.
 type SkuServiceServer interface {
 	New(context.Context, *UpsertRequest) (*Sku, error)
 	Get(context.Context, *GetRequest) (*Sku, error)

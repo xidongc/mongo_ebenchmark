@@ -25,8 +25,10 @@ import (
 	"github.com/xidongc-wish/mgo"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongo_ebenchmark/mprpc"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"google.golang.org/grpc"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -66,37 +68,38 @@ const (
 // to avoid interfere with production workload. client support multi
 // api. See the documentation on const for more details.
 type Client struct {
-	config     *Config
-	Host       string
-	Collection *mprpc.Collection
-	Turbo      bool
-	activeCon  *grpc.ClientConn
-	rpcClient  mprpc.MongoProxyClient
-	cancelFunc context.CancelFunc
-	Healthy    int32
-	ProtoFile  string
+	config      *cfg.ProxyConfig
+	Host        string
+	Collection  *mprpc.Collection
+	Turbo       bool
+	activeCon   *grpc.ClientConn
+	rpcClient   mprpc.MongoProxyClient
+	cancelFunc  context.CancelFunc
+	Healthy     int32
+	ProtoFile   string
+	amplifierWG sync.WaitGroup // add for lock prep work
 }
 
-// NewClient Creates a new proxy client based on provided config
+// NewClient Creates a new proxy client based on provided cfg
 // This method is generally called just once for con establish,
 // does health check in the background task, and check for env:
 // PROTOSET_FILE, this env represent grpc interface with driver
 //
 // Once Client is not useful anymore, Close must be called to
 // release the resources appropriately
-func NewClient(config *Config, namespace string, cancel context.CancelFunc) (client *Client, err error) {
+func NewClient(config *cfg.ProxyConfig, namespace string, cancel context.CancelFunc) (client *Client, err error) {
 	if config == nil {
-		config = DefaultConfig()
+		config = cfg.DefaultConfig()
 	}
 	if namespace == "" {
 		namespace = Collection
 	}
-	if config.Port < 0 || config.Port == 0 {
+	if config.ProxyPort < 0 || config.ProxyPort == 0 {
 		log.Warning("port not defined properly, set back to default")
-		config.Port = 50051
+		config.ProxyPort = 50051
 	}
 
-	host := fmt.Sprintf("%s:%d", config.ServerIp, config.Port)
+	host := fmt.Sprintf("%s:%d", config.ProxyAddr, config.ProxyPort)
 	client = &Client{
 		config: config,
 		Host:   host,
@@ -108,6 +111,7 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 		log.Panic("not found env PROTOSET_FILE")
 		return
 	}
+	client.amplifierWG = sync.WaitGroup{}
 	client.ProtoFile = val
 
 	if client.Collection == nil {
@@ -118,7 +122,7 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 	}
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("connect to rpc server error: %s", err)
+		log.Fatalf("connect to rpc cfg error: %s", err)
 	}
 	client.activeCon = conn
 	client.rpcClient = mprpc.NewMongoProxyClient(conn)
@@ -131,7 +135,7 @@ func NewClient(config *Config, namespace string, cancel context.CancelFunc) (cli
 		for {
 			_ = client.HealthCheck()
 			if atomic.LoadInt32(&client.Healthy) != 1 {
-				panic("server not healthy error")
+				panic("cfg not healthy error")
 			}
 			time.Sleep(time.Second * 300)
 		}
@@ -313,7 +317,7 @@ func (client *Client) Count(ctx context.Context, query *QueryParam) (count uint6
 	return
 }
 
-// Explain returns a number of details about how the MongoDB server would
+// Explain returns a number of details about how the MongoDB cfg would
 // execute the requested query, such as the number of objects examined,
 // the number of times the read lock was yielded to allow writes to go in,
 // and so on.
@@ -359,9 +363,9 @@ func (client *Client) Aggregate(ctx context.Context, query *AggregateParam) (doc
 func (client *Client) Update(ctx context.Context, param *UpdateParam) (changeInfo *mprpc.ChangeInfo, err error) {
 	var wOptions *mprpc.WriteOptions
 	if client.Turbo {
-		wOptions = getTurboWriteOptions()
+		wOptions = cfg.GetTurboWriteOptions()
 	} else {
-		wOptions = getSafeWriteOptions()
+		wOptions = cfg.GetSafeWriteOptions()
 	}
 
 	filter, err := bson.Marshal(param.Filter)
@@ -406,9 +410,9 @@ func (client *Client) Remove(ctx context.Context, param *RemoveParam) (changeInf
 	}
 	var wOptions *mprpc.WriteOptions
 	if client.Turbo {
-		wOptions = getTurboWriteOptions()
+		wOptions = cfg.GetTurboWriteOptions()
 	} else {
-		wOptions = getSafeWriteOptions()
+		wOptions = cfg.GetSafeWriteOptions()
 	}
 	removeOps := &mprpc.RemoveOperation{
 		Collection:   client.Collection,
@@ -444,9 +448,9 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 	}
 	var wOptions *mprpc.WriteOptions
 	if client.Turbo {
-		wOptions = getTurboWriteOptions()
+		wOptions = cfg.GetTurboWriteOptions()
 	} else {
-		wOptions = getSafeWriteOptions()
+		wOptions = cfg.GetSafeWriteOptions()
 	}
 	request := mprpc.InsertOperation{
 		Collection:   client.Collection,
@@ -455,6 +459,7 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 	}
 
 	if param.Amp != nil {
+		client.amplifierWG.Add(1)
 		report, err := runner.Run(
 			Insert,
 			client.Host,
@@ -463,7 +468,7 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 			runner.WithConnections(param.Amp.Connections),
 			runner.WithCPUs(param.Amp.CPUs),
 			runner.WithData(request),
-			runner.WithInsecure(true),
+			runner.WithInsecure(!client.config.Secure),
 		)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -481,6 +486,7 @@ func (client *Client) Insert(ctx context.Context, param *InsertParam) (err error
 				log.Error(err)
 			}
 		}
+		client.amplifierWG.Done()
 
 	} else {
 		log.Info("no amp specified")
@@ -519,9 +525,9 @@ func (client *Client) FindAndModify(ctx context.Context, param *FindModifyParam)
 
 	var wOptions *mprpc.WriteOptions
 	if client.Turbo {
-		wOptions = getTurboWriteOptions()
+		wOptions = cfg.GetTurboWriteOptions()
 	} else {
-		wOptions = getSafeWriteOptions()
+		wOptions = cfg.GetSafeWriteOptions()
 	}
 
 	// TODO add params back

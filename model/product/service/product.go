@@ -25,6 +25,7 @@ import (
 	"github.com/xidongc/mongo_ebenchmark/model/product/productpb"
 	skuService "github.com/xidongc/mongo_ebenchmark/model/sku/service"
 	"github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 	"strings"
 )
@@ -32,8 +33,8 @@ import (
 const ns = "product"
 
 type Service struct {
-	Storage   proxy.Client
-	Amplifier  proxy.Amplifier
+	Storage    proxy.Client
+	Amplifier  cfg.Amplifier
 	SkuService *skuService.Service
 }
 
@@ -44,7 +45,7 @@ func (s Service) New(ctx context.Context, req *productpb.NewRequest) (*productpb
 	}
 
 	product := productpb.Product{
-		Id:			 req.GetId(),
+		Id:          req.GetId(),
 		Name:        req.GetName(),
 		Description: req.GetDescription(),
 		Shippable:   req.GetShippable(),
@@ -108,7 +109,7 @@ func (s Service) Update(ctx context.Context, req *productpb.UpdateRequest) (prod
 		log.Error(err)
 		return
 	}
-	updateLowerParams := make (bson.M, len(updateParams))
+	updateLowerParams := make(bson.M, len(updateParams))
 	for key, val := range updateParams {
 		r := []rune(key)
 		key = strings.ToLower(string(r[0])) + string(r[1:])
@@ -157,7 +158,7 @@ func (s Service) Delete(ctx context.Context, req *productpb.DeleteRequest) (*pro
 }
 
 // Create Product Service client
-func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+func NewClient(config *cfg.ProxyConfig, cancel context.CancelFunc) (client *proxy.Client) {
 	client, _ = proxy.NewClient(config, ns, cancel)
 	return
 }

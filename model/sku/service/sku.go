@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
@@ -31,7 +32,7 @@ const ns = "sku"
 // SKU Service
 type Service struct {
 	Storage   proxy.Client
-	Amplifier  proxy.Amplifier
+	Amplifier cfg.Amplifier
 }
 
 // Find SKU
@@ -176,14 +177,14 @@ func (s *Service) GetProductSkus(ctx context.Context, req *skupb.GetProductSkusR
 		log.Infof("received sku: %+v", sku)
 		productSkus = append(productSkus, sku)
 	}
-	skus = &skupb.Skus {
+	skus = &skupb.Skus{
 		Skus: productSkus,
 	}
 	return
 }
 
 // Create SKU Service client
-func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+func NewClient(config *cfg.ProxyConfig, cancel context.CancelFunc) (client *proxy.Client) {
 	client, _ = proxy.NewClient(config, ns, cancel)
 	return
 }

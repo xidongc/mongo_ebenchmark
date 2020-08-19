@@ -25,8 +25,8 @@ import (
 	"time"
 )
 
-type AliPay struct{
-	client 		alipay.Client
+type AliPay struct {
+	client alipay.Client
 }
 
 func (*AliPay) ProviderId() (paymentId paymentpb.PaymentProviderId) {
@@ -38,17 +38,17 @@ func (a *AliPay) Charge(req *paymentpb.ChargeRequest) (charge *paymentpb.Charge,
 	if req == nil {
 		return
 	}
-		pay.TotalAmount = strconv.Itoa(int(req.GetAmount()))
-		pay.Subject = req.GetStatement()
-		pay.OutTradeNo = req.GetUserId()
-		pay.ProductCode = req.GetUserId()  // TODO add order id
+	pay.TotalAmount = strconv.Itoa(int(req.GetAmount()))
+	pay.Subject = req.GetStatement()
+	pay.OutTradeNo = req.GetUserId()
+	pay.ProductCode = req.GetUserId() // TODO add order id
 
 	charge = &paymentpb.Charge{
-		Id: 			fmt.Sprintf("%s", uuid.New()),
-		Currency:		req.Currency,
-		Paid: 			true,
-		ChargeAmount: 	req.Amount,
-		UserId:			req.GetUserId(),
+		Id:           fmt.Sprintf("%s", uuid.New()),
+		Currency:     req.Currency,
+		Paid:         true,
+		ChargeAmount: req.Amount,
+		UserId:       req.GetUserId(),
 	}
 	charge.Created = time.Now().UnixNano()
 	charge.Updated = charge.Created

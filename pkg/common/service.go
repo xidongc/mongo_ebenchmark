@@ -14,4 +14,7 @@
  *
  */
 
-package main
+package common
+
+type Service interface {
+}

@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongo_ebenchmark/model/user/userpb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
@@ -30,27 +31,27 @@ const ns = "user"
 
 type Service struct {
 	Storage   proxy.Client
-	Amplifier proxy.Amplifier
+	Amplifier cfg.Amplifier
 }
 
 // Create User
 func (s Service) New(ctx context.Context, req *userpb.NewRequest) (user *userpb.User, err error) {
-	 reqUser := userpb.User{
+	reqUser := userpb.User{
 		Name:     req.GetName(),
 		Active:   req.GetActive(),
 		Nickname: req.GetNickname(),
-		Email:	  req.GetEmail(),
+		Email:    req.GetEmail(),
 		Balance:  req.GetBalance(),
 		Currency: req.GetCurrency(),
-		Image: 	  req.GetImage(),
-		Pwd:	  req.GetPwd(),
+		Image:    req.GetImage(),
+		Pwd:      req.GetPwd(),
 		Metadata: req.GetMetadata(),
 	}
 
 	var desired bson.M
-    if err = mapstructure.Decode(reqUser, &desired); err != nil {
-	    log.Error(err)
-    }
+	if err = mapstructure.Decode(reqUser, &desired); err != nil {
+		log.Error(err)
+	}
 
 	param := proxy.FindModifyParam{
 		Filter:   bson.M{"Nickname": req.Nickname},
@@ -125,7 +126,7 @@ func (s Service) Deactivate(ctx context.Context, req *userpb.DeleteRequest) (use
 }
 
 // Create User Service client
-func NewClient(config *proxy.Config, cancel context.CancelFunc) (client *proxy.Client) {
+func NewClient(config *cfg.ProxyConfig, cancel context.CancelFunc) (client *proxy.Client) {
 	client, _ = proxy.NewClient(config, ns, cancel)
 	return
 }

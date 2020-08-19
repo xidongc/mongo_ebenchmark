@@ -14,4 +14,15 @@
  *
  */
 
-package main
+package proxy
+
+import (
+	"context"
+	"github.com/xidongc-wish/mgo/bson"
+	"github.com/xidongc/mongo_ebenchmark/mprpc"
+)
+
+type Storage interface {
+	Find(ctx context.Context, query *QueryParam) (docs []bson.M, err error)
+	FindIter(ctx context.Context, query *QueryParam) (stream mprpc.MongoProxy_FindIterClient, err error)
+}

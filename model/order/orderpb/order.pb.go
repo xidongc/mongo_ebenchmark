@@ -1229,7 +1229,7 @@ func (c *orderServiceClient) Return(ctx context.Context, in *ReturnRequest, opts
 	return out, nil
 }
 
-// OrderServiceServer is the server API for OrderService service.
+// OrderServiceServer is the cfg API for OrderService service.
 type OrderServiceServer interface {
 	New(context.Context, *NewRequest) (*Order, error)
 	Get(context.Context, *GetRequest) (*Order, error)

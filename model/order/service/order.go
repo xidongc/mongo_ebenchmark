@@ -25,6 +25,7 @@ import (
 	"github.com/xidongc/mongo_ebenchmark/model/order/orderpb"
 	"github.com/xidongc/mongo_ebenchmark/model/payment/paymentpb"
 	payment "github.com/xidongc/mongo_ebenchmark/model/payment/service"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 )
 
@@ -33,7 +34,7 @@ const ns = "order"
 type Service struct {
 	Storage   proxy.Client
 	Payment   payment.Service
-	Amplifier proxy.Amplifier
+	Amplifier cfg.Amplifier
 }
 
 // Create Order

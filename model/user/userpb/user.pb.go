@@ -819,7 +819,7 @@ func (c *userServiceClient) Deactivate(ctx context.Context, in *DeleteRequest, o
 	return out, nil
 }
 
-// UserServiceServer is the server API for UserService service.
+// UserServiceServer is the cfg API for UserService service.
 type UserServiceServer interface {
 	New(context.Context, *NewRequest) (*User, error)
 	Get(context.Context, *GetRequest) (*User, error)

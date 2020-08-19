@@ -21,6 +21,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/xidongc-wish/mgo/bson"
 	"github.com/xidongc/mongo_ebenchmark/model/sku/skupb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"github.com/xidongc/mongo_ebenchmark/pkg/proxy"
 	"testing"
 )
@@ -31,12 +32,12 @@ func TestSkuServiceApi(t *testing.T) {
 	param := &proxy.QueryParam{
 		Filter:  bson.M{"Name": "xidong"},
 		FindOne: true,
-		Amp:     proxy.MicroAmplifier(),
+		Amp:     cfg.MicroAmplifier(),
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	storage := NewClient(proxy.DefaultConfig(), cancel)
+	storage := NewClient(cfg.DefaultConfig(), cancel)
 
 	defer func() {
 		err := storage.Close()

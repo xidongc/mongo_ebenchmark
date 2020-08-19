@@ -1571,7 +1571,7 @@ func (c *paymentServiceClient) Get(ctx context.Context, in *GetRequest, opts ...
 	return out, nil
 }
 
-// PaymentServiceServer is the server API for PaymentService service.
+// PaymentServiceServer is the cfg API for PaymentService service.
 type PaymentServiceServer interface {
 	NewCharge(context.Context, *ChargeRequest) (*Charge, error)
 	RefundCharge(context.Context, *RefundRequest) (*Charge, error)

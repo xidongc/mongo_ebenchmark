@@ -18,6 +18,7 @@ package proxy
 
 import (
 	"github.com/xidongc-wish/mgo/bson"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 )
 
 type Empty struct{}
@@ -34,19 +35,19 @@ type QueryParam struct {
 	Distinctkey string
 	FindOne     bool
 	UsingIndex  []string
-	Amp         Amplifier
+	Amp         cfg.Amplifier
 }
 
 // Insert param for upper services
 type InsertParam struct {
 	Docs []interface{}
-	Amp  Amplifier
+	Amp  cfg.Amplifier
 }
 
 // Remove param for upper services
 type RemoveParam struct {
 	Filter bson.M
-	Amp    Amplifier
+	Amp    cfg.Amplifier
 }
 
 // Update param for upper services
@@ -55,7 +56,7 @@ type UpdateParam struct {
 	Update bson.M
 	Upsert bool
 	Multi  bool
-	Amp    Amplifier
+	Amp    cfg.Amplifier
 }
 
 // FindAndModify param for upper services
@@ -65,7 +66,7 @@ type FindModifyParam struct {
 	Mode     FindAndModifyMode
 	SortRule []string
 	Fields   bson.M
-	Amp      Amplifier
+	Amp      cfg.Amplifier
 }
 
 // Aggregate param for upper services

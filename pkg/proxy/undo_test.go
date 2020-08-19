@@ -18,6 +18,7 @@ package proxy
 
 import (
 	"github.com/xidongc/mongo_ebenchmark/model/order/orderpb"
+	"github.com/xidongc/mongo_ebenchmark/pkg/cfg"
 	"testing"
 )
 
@@ -42,7 +43,7 @@ func TestUndoInsert(t *testing.T) {
 	items[1] = item2
 	insertParam := InsertParam{
 		Docs: items,
-		Amp:  MicroAmplifier(),
+		Amp:  cfg.MicroAmplifier(),
 	}
 	removeParam := UndoInsert(&insertParam)
 	if len(removeParam) != 2 {

@@ -902,7 +902,7 @@ func (c *productServiceClient) Delete(ctx context.Context, in *DeleteRequest, op
 	return out, nil
 }
 
-// ProductServiceServer is the server API for ProductService service.
+// ProductServiceServer is the cfg API for ProductService service.
 type ProductServiceServer interface {
 	New(context.Context, *NewRequest) (*Product, error)
 	Get(context.Context, *GetRequest) (*Product, error)
