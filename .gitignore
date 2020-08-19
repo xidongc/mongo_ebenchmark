@@ -16,6 +16,7 @@ vendor/
 bin/
 mprpc/
 out/
+results/
 
 # private files
 pkg/proxy/rpc.protoset

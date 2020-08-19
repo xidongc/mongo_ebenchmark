@@ -19,6 +19,10 @@ dev:
 	aws ecr get-login-password --region cn-north-1 | docker login --username AWS --password-stdin 030836370731.dkr.ecr.cn-north-1.amazonaws.com.cn
 	$(SKAFFOLD) dev
 
+image:
+	aws ecr get-login-password --region cn-north-1 | docker login --username AWS --password-stdin 030836370731.dkr.ecr.cn-north-1.amazonaws.com.cn
+	$(SKAFFOLD) build
+
 build/ebenchmark.linux:
 	@echo "$@"
 	@GOOS=linux CGO_ENABLED=0 go build -o out/ebenchmark.linux \
